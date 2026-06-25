@@ -21,7 +21,7 @@ private val BROWSER_URL_BAR_IDS = mapOf(
 
 /**
  * フォアグラウンドアプリ・Brave/ChromeのアドレスバーURLを検知し、
- * 現在有効なAPP_BLOCK/SITE_BLOCKルールに該当すればホーム画面に戻す。
+ * 現在有効なAPP_BLOCK/SITE_BLOCKルールに該当すればブロックする。
  * ルールの有効判定（曜日・時間帯・在宅条件・祝日）はrule.RuleEngineに委譲する。
  */
 class BlockAccessibilityService : AccessibilityService() {
@@ -39,7 +39,7 @@ class BlockAccessibilityService : AccessibilityService() {
             packageName in activeTargets(RuleTargetType.APP_BLOCK)
         ) {
             Log.d(TAG, "blocking app: $packageName")
-            performGlobalAction(GLOBAL_ACTION_HOME)
+            blockCurrentScreen()
             return
         }
 
@@ -53,8 +53,20 @@ class BlockAccessibilityService : AccessibilityService() {
         Log.d(TAG, "browser event pkg=$packageName url=$url activeSiteTargets=$siteTargets")
         if (url != null && siteTargets.any { url.contains(it, ignoreCase = true) }) {
             Log.d(TAG, "blocking site: $url")
-            performGlobalAction(GLOBAL_ACTION_HOME)
+            blockCurrentScreen()
         }
+    }
+
+    /**
+     * GLOBAL_ACTION_HOMEはYouTube等のPicture-in-Picture対応アプリでは
+     * 「ホームに戻る」操作として認識され、アプリを閉じずに小窓(PiP)化させて
+     * しまう。GLOBAL_ACTION_BACKはPiPを誘発しないため、これを使う。
+     * 1回のBACKでルート画面まで戻りきれない場合は、その後も発生する
+     * 画面変化イベントのたびにこの処理が呼ばれ、結果的に複数回backした
+     * のと同じ動きになりアプリの外まで戻る。
+     */
+    private fun blockCurrentScreen() {
+        performGlobalAction(GLOBAL_ACTION_BACK)
     }
 
     private fun activeTargets(type: RuleTargetType): Set<String> {
