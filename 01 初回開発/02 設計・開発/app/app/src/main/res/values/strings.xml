@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">smartphone_detox</string>
+    <string name="accessibility_service_description">指定したアプリ・サイトへのアクセスを検知してブロックするために使用します。</string>
 </resources>
