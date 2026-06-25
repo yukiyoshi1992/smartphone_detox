@@ -72,18 +72,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 
 - **要件定義・技術方針ともに全項目確定**。`01 初回開発/01 要件/要件定義.md`（確定版まとめ＋Mermaidアーキテクチャ図）を作成済み。
 - **実装フェーズ進行中**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、`minSdk=34`/`compileSdk・targetSdk=37`）。日本語パスのGradleエラー・compileSdk不足エラーは解消済み（上記「開発環境・git運用」参照）。実機での起動確認済み。
-- **実装順序①完了・実機検証済み**：`BlockAccessibilityService`（`block`パッケージ）を実装。フォアグラウンドアプリ検知でブロック対象（現状YouTubeのみハードコード）ならホーム画面に戻す。実機でYouTubeアプリを開くと即座にホームに戻ることを確認済み。
-- **実装順序②完了・実機検証済み**：`home`パッケージにWi-Fi在宅判定を実装（`HomeWifiSettings`で複数SSID設定の保存、`HomeWifiStatus`で現在のWi-Fi接続SSIDとの一致判定、機種依存対策として`WifiManager.connectionInfo`へのフォールバックあり）。MainActivityに設定UI・「今接続中のWi-Fiを登録」ボタン・権限リクエスト・状態確認ボタンを追加。実機で在宅/非在宅の判定が正しく動作することを確認済み。
-- **実装順序③実装済み**：`rule`パッケージにルールエンジンを実装（`TimeRule`：曜日・開始終了時刻・在宅条件を持つルール、`RuleEngine`：日付をまたぐ時間帯にも対応した有効判定、`RuleSettings`：SharedPreferencesへの保存、`RuleSection`：ルール追加・削除・有効確認のUI、時刻入力はMaterial3 TimePicker）。
-- **進め方変更（2026-06-25、ユーザー指示）**：1機能実装→即実機確認、を繰り返す進め方から、**④⑤⑥を都度のユーザー確認を挟まずまとめて実装し、最後にまとめてモンキーテストする**進め方に変更。UI整理（Wi-Fi/GPS設定画面と管理画面の分割等）もモンキーテスト後にまとめて対応する。
-- **実装順序④完了**：`BlockAccessibilityService`にBrave/Chromeのアドレスバー検知を追加（`com.android.chrome:id/url_bar`等のリソースIDを読み取り、ブロック対象ドメインに該当すればホームに戻す）。ブロック対象アプリ・サイトはハードコードを廃止し、`BlockSettings`（SharedPreferences）＋`BlockSettingsSection`（UI、インストール済みアプリから選択して追加）で管理するように変更。
-- **実装順序⑤完了**：`notification`パッケージに通知マナーモード自動切替を実装（`RingerModeController`：`ACCESS_NOTIFICATION_POLICY`権限チェック＋リンガーモード切替、`NotificationRuleSection`：通知専用の時間帯ルールUI、ブロック用ルールと同じ`TimeRuleForm`/`RuleEngine`を再利用し`RuleSettings`の保存先のみ分離）。
-- **実装順序⑥完了**：`holiday`パッケージに祝日API連携を実装（`HolidayRepository`：holidays-jp公開APIから祝日一覧を取得しSharedPreferencesにキャッシュ、取得失敗時は既存キャッシュを使い続ける）。`TimeRule.includeHolidays`を追加し、ONにすると曜日指定に関わらず祝日ならルールが適用される。ブロック用・通知用の両ルール画面表示時に`refreshIfStale()`で自動更新。
-- **①～⑥すべて実装済み**。モンキーテスト前にユーザーから「どう使えばいいかわからないので画面を分けてほしい」との要望があり、**Navigation Composeを導入して3画面構成に再編**：
-  - TOP画面（`ui/TopScreen.kt`）：設定・ルール管理への遷移ボタン、ブロック機能全体ON/OFFスイッチ（`block/AppMasterSettings.kt`、BlockAccessibilityServiceがOFF中は何もしない）、在宅状況・アクセシビリティ許可状況（`block/AccessibilityStatus.kt`）の表示
-  - 設定画面（`ui/SettingsScreen.kt`）：アクセシビリティ設定、Wi-Fi登録・在宅確認（旧MainActivity直書きの内容を移動）
-  - ルール管理画面（`ui/RuleManagementScreen.kt`）：タブで「ブロック」（時間帯ルール＋ブロック対象アプリ・サイト）／「通知」（通知ルール）を切替。各ルール一覧に有効/無効の`Switch`を追加（`TimeRule.enabled`、削除せず一時停止できる）
-  - `ui/AppNavHost.kt`でルーティング、`MainActivity.kt`はNavHostを呼ぶだけに簡素化
-- **実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは追加済みだが「結果：未実施」が多数残っている状態）。
+- **実装順序①～⑥すべて実装済み**（アプリ/サイトブロック、Wi-Fi在宅判定、時間帯ルール、通知マナーモード自動切替、祝日API連携）。詳細な実装経緯は`docs/handover.md`参照。
+- **現在のアプリ構成（2026-06-25時点、画面・ルールモデルとも数回の見直し後の最新形）**：
+  - **画面はTOP／設定／ルール管理（一覧）／ルール作成・編集の4つ**（`ui/`配下、Navigation Compose使用、`ui/AppNavHost.kt`でルーティング）。
+    - TOP画面（`ui/TopScreen.kt`）：設定・ルール管理への遷移、ブロック機能全体ON/OFFスイッチ（`block/AppMasterSettings.kt`）、在宅状況・アクセシビリティ許可状況の表示、通知ルール一括適用ボタン。
+    - 設定画面（`ui/SettingsScreen.kt`）：アクセシビリティ設定、通知アクセス許可、Wi-Fi登録・在宅確認。
+    - ルール管理画面（`ui/RuleManagementScreen.kt`）：ルール一覧（名前・種別・有効/無効スイッチ）、新規作成ボタン、行ごとの削除ボタン、タップで編集画面へ。
+    - ルール作成・編集画面（`ui/RuleEditScreen.kt`）：1ルールずつ、種類（アプリブロック／サイトブロック／通知）を選んでから対象（アプリ選択・ドメイン文字列）と時間帯/曜日/在宅/祝日条件を設定。
+  - **ルールモデルは`rule/AppRule.kt`に統一**：1つのルールが`targetType`（APP_BLOCK/SITE_BLOCK/NOTIFICATION）と`targets`（パッケージ名またはドメイン文字列）を直接持つ。旧来の「グローバルなブロック対象リスト＋別管理の時間帯ルール」「ブロック用/通知用で別のルール保存先」という分離構造は廃止し、`rule/AppRuleSettings.kt`に一本化。
+  - `block/BlockAccessibilityService.kt`が`rule/RuleEngine.kt`（曜日・時間帯・在宅・祝日判定）を使って今アクティブなAPP_BLOCK/SITE_BLOCKルールのtargetsを都度算出し、実際のブロック判定に使う（**以前はルールの時間帯条件がブロック動作に反映されておらず、登録した対象は常時ブロックされていた不備があり、2026-06-25に修正済み**）。
+- **実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは更新済みだが「結果：未実施」が多数残っている状態）。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
