@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -36,6 +38,7 @@ import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.currentWifiSsid
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
+import com.yukiyoshi.smphdetox.rule.RuleSection
 import com.yukiyoshi.smphdetox.ui.theme.Smartphone_detoxTheme
 
 class MainActivity : ComponentActivity() {
@@ -81,7 +84,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -137,6 +142,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             Text(text = "在宅状態を確認")
         }
         Text(text = "状態: $statusText")
+
+        Spacer(modifier = Modifier.height(24.dp))
+        RuleSection()
     }
 }
 
