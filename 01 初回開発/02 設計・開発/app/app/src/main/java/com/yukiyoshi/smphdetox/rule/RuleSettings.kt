@@ -22,4 +22,8 @@ class RuleSettings(context: Context, storeName: String = DEFAULT_PREFS_NAME) {
     fun removeRule(id: String) {
         rules = rules.filterNot { it.id == id }
     }
+
+    fun updateRule(rule: TimeRule) {
+        rules = rules.map { if (it.id == rule.id) rule else it }
+    }
 }

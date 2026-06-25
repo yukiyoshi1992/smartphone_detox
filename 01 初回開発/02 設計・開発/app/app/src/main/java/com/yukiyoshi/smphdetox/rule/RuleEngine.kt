@@ -14,6 +14,7 @@ fun isRuleActive(
     isHome: Boolean,
     holidayDates: Set<LocalDate> = emptySet(),
 ): Boolean {
+    if (!rule.enabled) return false
     if (rule.requireHome && !isHome) return false
 
     fun dayMatches(date: LocalDate): Boolean =

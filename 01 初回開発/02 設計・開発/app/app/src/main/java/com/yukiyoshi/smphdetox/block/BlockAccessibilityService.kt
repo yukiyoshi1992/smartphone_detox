@@ -16,8 +16,10 @@ private val BROWSER_URL_BAR_IDS = mapOf(
 class BlockAccessibilityService : AccessibilityService() {
 
     private val settings by lazy { BlockSettings(applicationContext) }
+    private val masterSettings by lazy { AppMasterSettings(applicationContext) }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        if (!masterSettings.enabled) return
         val packageName = event.packageName?.toString() ?: return
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&

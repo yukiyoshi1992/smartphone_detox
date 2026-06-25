@@ -3,6 +3,7 @@ package com.yukiyoshi.smphdetox.rule
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
@@ -31,7 +33,14 @@ fun RuleSection() {
     Column {
         Text(text = "時間帯ルール（ブロック対象アプリ・サイトに適用）")
         rules.forEach { rule ->
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(
+                    checked = rule.enabled,
+                    onCheckedChange = {
+                        ruleSettings.updateRule(rule.copy(enabled = it))
+                        rules = ruleSettings.rules
+                    },
+                )
                 val days = rule.daysOfWeek.joinToString(",") { it.name.take(3) }
                 val homeLabel = if (rule.requireHome) "在宅時のみ" else "在宅問わず"
                 val holidayLabel = if (rule.includeHolidays) " [祝日含む]" else ""
