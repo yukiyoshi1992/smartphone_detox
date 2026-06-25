@@ -110,13 +110,17 @@
   - `home/HomeWifiStatus.kt`新規作成：`ConnectivityManager`/`NetworkCapabilities`から現在接続中のWi-FiのSSIDを取得し（`WifiInfo`経由）、登録した自宅SSIDと一致するか判定する`isHomeWifiConnected()`。
   - `AndroidManifest.xml`に`ACCESS_WIFI_STATE`・`ACCESS_FINE_LOCATION`権限を追加（SSID取得には位置情報権限が必要なAndroidの仕様）。
   - `MainActivity.kt`を更新：自宅SSID入力欄＋保存ボタン、位置情報権限のランタイムリクエストボタン、「在宅状態を確認」ボタンと状態表示テキストを追加。
-  - NASパス側で作業・commit&push済み。**ユーザー側はローカルクローンで`git pull`してビルド・実機確認が必要、まだ未実施。**
+  - NASパス側で作業・commit&push済み。
+  - ユーザーから「自宅のWi-FiはAとGで二つ登録したい」との要望。複数SSID対応に変更：`HomeWifiSettings`を単一SSIDから`Set<String>`に変更、`MainActivity`に追加・削除UIを実装。commit&push済み。
+  - ユーザーが`git pull`・ビルド後、「在宅状態を確認」ボタンを押すとアプリがクラッシュ。ユーザーがlogcatファイル（`01 初回開発/02 設計・開発/test/logcat.txt`）を共有してくれた。
+  - **クラッシュ原因**：`java.lang.SecurityException: ConnectivityService: ... does not have android.permission.ACCESS_NETWORK_STATE.` — `ConnectivityManager.getActiveNetwork()`の呼び出しに必要な`ACCESS_NETWORK_STATE`権限をManifestへ宣言し忘れていた（Claudeの実装漏れ）。
+  - **対処**：`AndroidManifest.xml`に`ACCESS_NETWORK_STATE`権限を追加。commit&push済み。**ユーザー側の再ビルド・確認待ち。**
 
 ### 次にやること（次セッション/次タスク最優先）
-1. ユーザーにローカルクローンで`git pull`してもらい、ビルド・実機確認を依頼する。**ここから継続。** 自宅Wi-Fiに接続した状態とそうでない状態の両方で「在宅状態を確認」ボタンを押し、正しく判定されるか確認してもらう。
+1. ユーザーにローカルクローンで`git pull`してもらい、再ビルド・実機確認を依頼する。**ここから継続。** クラッシュが直っているか、複数登録した自宅Wi-Fiのどちらでも「在宅中」と判定されるか確認してもらう。
 2. 動作確認できたら、③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
 3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
-4. XML属性値などAndroid SDKの正確な仕様が必要な箇所は、記述前に可能な範囲で公式ドキュメント表記を確認し、タイプミスを減らすこと（実装順序①でのフラグ名ミスの教訓）。
+4. **新しいAndroid権限（ACCESS_NETWORK_STATE等）やAPIを使う際は、Manifestへの宣言漏れがないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ、と2回連続で実機検証まで進んでようやく発覚した教訓）。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
