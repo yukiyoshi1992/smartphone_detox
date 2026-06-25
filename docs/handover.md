@@ -94,11 +94,13 @@
   - **エラー内容**：`Your project path contains non-ASCII characters` — プロジェクトパス`01 初回開発/02 設計・開発/app`に日本語フォルダ名が含まれるため、Android Gradle Plugin（9.2.1）のASCII限定パスチェックに引っかかった。**ローカルクローンに切り替えても、NAS特有ではなくパス内の日本語自体が原因なので発生することが判明**（CLAUDE.mdの過去の記述を修正）。
   - **対処**：`01 初回開発/02 設計・開発/app/gradle.properties`に`android.overridePathCheck=true`（パスチェック無効化）と`org.gradle.vfs.watch=false`（前回PJの既知対処）を追加。ローカルクローン側（`C:\Users\yukiy\dev\smartphone_detox`）で編集・commit・push、その後NASパス側で`git pull`して同期。
   - CLAUDE.mdに実績を反映、commit&push済み。
-  - **ユーザーに再度Gradle Syncを試してもらうよう依頼予定。結果待ち。**
+  - ユーザーが再度Gradle Syncを実行 → **Sync自体は通った**。次にビルド（`assembleDebug`）でエラー：`checkDebugAarMetadata`が失敗、`androidx.core-ktx:1.19.0`等3つの依存ライブラリが「compileSdk 37以上が必要」と要求。プロジェクトは`compileSdk 36`（36.1）だったため不一致。
+  - **対処**：`app/build.gradle.kts`の`compileSdk`を37に、`targetSdk`を36→37に変更（`minSdk=34`はそのまま）。ローカルクローン側で編集・commit・push、NASパス側でpullして同期済み。
+  - **ユーザーに再ビルドを依頼予定。結果待ち。**（compileSdk 37のSDK Platformがインストールされていない場合、Android StudioのSDK Managerでのインストールが追加で必要になる可能性あり——エラーが出たら案内する）
 
 ### 次にやること（次セッション/次タスク最優先）
-1. ユーザーにGradle Syncを再試行してもらい、解消したか確認する。**ここから継続。** 解消していなければエラーログを再度送ってもらい調査する。
-2. Gradle Syncが通ったら、最小構成（空のCompose画面）が実機/エミュレータで起動できることを確認してもらう。
+1. ユーザーに再ビルド（assembleDebugまたは実行ボタン）を試してもらい、解消したか確認する。**ここから継続。** SDK Platform 37未インストールのエラーが出た場合はSDK Managerでのインストール手順を案内する。
+2. ビルドが通ったら、最小構成（空のCompose画面）が実機/エミュレータで起動できることを確認してもらう。
 3. 実装順序の提案（要相談）：①AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移（最小の動作確認）→②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、のように小さく動くものを積み上げていく前回PJのパターンを踏襲する想定。
 4. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。Android関連ファイルを編集する際は、どちらの作業ツリーで編集したか・pull/push済みかを都度確認すること（取り違えると変更が消える/競合するリスクがある）。
 
