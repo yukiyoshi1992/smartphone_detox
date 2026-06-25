@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +55,8 @@ class MainActivity : ComponentActivity() {
 fun HomeScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val settings = remember { HomeWifiSettings(context) }
-    var homeSsidInput by remember { mutableStateOf(settings.homeSsid ?: "") }
+    var homeSsids by remember { mutableStateOf(settings.homeSsids) }
+    var newSsidInput by remember { mutableStateOf("") }
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -71,7 +74,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     fun refreshStatus() {
         statusText = when {
             !hasLocationPermission -> "位置情報の許可が必要です"
-            isHomeWifiConnected(context, settings.homeSsid) -> "在宅中"
+            isHomeWifiConnected(context, homeSsids) -> "在宅中"
             else -> "非在宅（または対象Wi-Fi未接続）"
         }
     }
@@ -89,16 +92,29 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "自宅Wi-FiのSSID")
+        Text(text = "自宅Wi-FiのSSID（複数登録可）")
+        homeSsids.forEach { ssid ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = ssid)
+                TextButton(onClick = {
+                    settings.removeHomeSsid(ssid)
+                    homeSsids = settings.homeSsids
+                }) {
+                    Text(text = "削除")
+                }
+            }
+        }
         OutlinedTextField(
-            value = homeSsidInput,
-            onValueChange = { homeSsidInput = it },
+            value = newSsidInput,
+            onValueChange = { newSsidInput = it },
+            label = { Text(text = "SSIDを追加") },
         )
         Button(onClick = {
-            settings.homeSsid = homeSsidInput
-            refreshStatus()
+            settings.addHomeSsid(newSsidInput)
+            homeSsids = settings.homeSsids
+            newSsidInput = ""
         }) {
-            Text(text = "保存")
+            Text(text = "追加")
         }
 
         if (!hasLocationPermission) {

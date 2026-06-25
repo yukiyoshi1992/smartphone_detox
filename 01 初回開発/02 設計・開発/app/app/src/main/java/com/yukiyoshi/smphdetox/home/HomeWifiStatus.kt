@@ -21,7 +21,7 @@ fun currentWifiSsid(context: Context): String? {
     return ssid.removeSurrounding("\"")
 }
 
-fun isHomeWifiConnected(context: Context, homeSsid: String?): Boolean {
-    if (homeSsid.isNullOrBlank()) return false
-    return currentWifiSsid(context) == homeSsid
+fun isHomeWifiConnected(context: Context, homeSsids: Set<String>): Boolean {
+    if (homeSsids.isEmpty()) return false
+    return currentWifiSsid(context) in homeSsids
 }
