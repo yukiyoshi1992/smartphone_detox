@@ -1,6 +1,7 @@
 package com.yukiyoshi.smphdetox.block
 
 import android.accessibilityservice.AccessibilityService
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
@@ -9,6 +10,8 @@ import com.yukiyoshi.smphdetox.rule.AppRuleSettings
 import com.yukiyoshi.smphdetox.rule.RuleTargetType
 import com.yukiyoshi.smphdetox.rule.isRuleActive
 import java.time.LocalDateTime
+
+private const val TAG = "BlockAccessibility"
 
 /** Brave/ChromeそれぞれのアドレスバーのリソースID（どちらもChromiumベースのため同名）。 */
 private val BROWSER_URL_BAR_IDS = mapOf(
@@ -35,6 +38,7 @@ class BlockAccessibilityService : AccessibilityService() {
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             packageName in activeTargets(RuleTargetType.APP_BLOCK)
         ) {
+            Log.d(TAG, "blocking app: $packageName")
             performGlobalAction(GLOBAL_ACTION_HOME)
             return
         }
@@ -44,8 +48,11 @@ class BlockAccessibilityService : AccessibilityService() {
             event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
         if (!isBrowserEvent) return
 
-        val url = currentAddressBarText(urlBarId) ?: return
-        if (activeTargets(RuleTargetType.SITE_BLOCK).any { url.contains(it, ignoreCase = true) }) {
+        val url = currentAddressBarText(urlBarId)
+        val siteTargets = activeTargets(RuleTargetType.SITE_BLOCK)
+        Log.d(TAG, "browser event pkg=$packageName url=$url activeSiteTargets=$siteTargets")
+        if (url != null && siteTargets.any { url.contains(it, ignoreCase = true) }) {
+            Log.d(TAG, "blocking site: $url")
             performGlobalAction(GLOBAL_ACTION_HOME)
         }
     }

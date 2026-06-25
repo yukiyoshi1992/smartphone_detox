@@ -21,7 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.block.AppMasterSettings
@@ -30,10 +32,20 @@ import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
 import com.yukiyoshi.smphdetox.notification.applyRingerMode
+import com.yukiyoshi.smphdetox.notification.hasNotificationPolicyAccess
 import com.yukiyoshi.smphdetox.rule.AppRuleSettings
 import com.yukiyoshi.smphdetox.rule.RuleTargetType
 import com.yukiyoshi.smphdetox.rule.activeRules
 import java.time.LocalDateTime
+
+@Composable
+private fun StatusLine(label: String, value: String, isWarning: Boolean) {
+    Text(
+        text = "$label: $value",
+        color = if (isWarning) Color.Red else Color.Unspecified,
+        fontWeight = if (isWarning) FontWeight.Bold else FontWeight.Normal,
+    )
+}
 
 @Composable
 fun TopScreen(
@@ -49,10 +61,12 @@ fun TopScreen(
     var masterEnabled by remember { mutableStateOf(masterSettings.enabled) }
     var homeStatusText by remember { mutableStateOf("未確認") }
     var accessibilityEnabled by remember { mutableStateOf(false) }
+    var notificationAccessEnabled by remember { mutableStateOf(false) }
     var notificationStatusText by remember { mutableStateOf("未適用") }
 
     LaunchedEffect(Unit) {
         accessibilityEnabled = isBlockAccessibilityServiceEnabled(context)
+        notificationAccessEnabled = hasNotificationPolicyAccess(context)
         val hasLocationPermission = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -88,17 +102,28 @@ fun TopScreen(
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Text(text = "動作状況")
-        Text(text = "在宅状況: $homeStatusText")
-        Text(text = "アクセシビリティ: " + if (accessibilityEnabled) "許可済み" else "未許可")
+        StatusLine(label = "在宅状況", value = homeStatusText, isWarning = false)
+        StatusLine(
+            label = "アクセシビリティ",
+            value = if (accessibilityEnabled) "許可済み" else "未許可（設定画面で許可してください）",
+            isWarning = !accessibilityEnabled,
+        )
+        StatusLine(
+            label = "通知へのアクセス",
+            value = if (notificationAccessEnabled) "許可済み" else "未許可（設定画面で許可してください）",
+            isWarning = !notificationAccessEnabled,
+        )
         HorizontalDivider()
 
         Spacer(modifier = Modifier.height(24.dp))
+        Text(text = "通知ルールは自動実行されません。下のボタンを押した時点の時間で\n通知ルールを判定し、マナーモード/通常モードを切り替えます。")
         Button(onClick = {
             val isHome = isHomeWifiConnected(context, homeWifiSettings.homeSsids)
             val holidayDates = holidayRepository.cachedHolidayDates()
             val notificationRules = ruleSettings.rules.filter { it.targetType == RuleTargetType.NOTIFICATION }
             val active = activeRules(notificationRules, LocalDateTime.now(), isHome, holidayDates)
             val applied = applyRingerMode(context, quiet = active.isNotEmpty())
+            notificationAccessEnabled = hasNotificationPolicyAccess(context)
             notificationStatusText = when {
                 !applied -> "通知へのアクセス権限が必要です（設定画面で許可してください）"
                 active.isEmpty() -> "対象ルールなし→通常モードに設定"

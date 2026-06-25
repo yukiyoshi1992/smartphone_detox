@@ -7,11 +7,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yukiyoshi.smphdetox.rule.RuleTargetType
 
 private const val ROUTE_TOP = "top"
 private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_RULES = "rules"
-private const val ROUTE_RULE_CREATE = "rule_edit"
+private const val ROUTE_RULE_CREATE = "rule_create/{targetType}"
 private const val ROUTE_RULE_EDIT = "rule_edit/{ruleId}"
 
 @Composable
@@ -24,22 +25,40 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 onNavigateToRules = { navController.navigate(ROUTE_RULES) },
             )
         }
-        composable(ROUTE_SETTINGS) { SettingsScreen() }
+        composable(ROUTE_SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStack() })
+        }
         composable(ROUTE_RULES) {
             RuleManagementScreen(
-                onCreateRule = { navController.navigate(ROUTE_RULE_CREATE) },
+                onBack = { navController.popBackStack() },
+                onCreateRule = { type -> navController.navigate("rule_create/${type.name}") },
                 onEditRule = { ruleId -> navController.navigate("rule_edit/$ruleId") },
             )
         }
-        composable(ROUTE_RULE_CREATE) {
-            RuleEditScreen(ruleId = null, onDone = { navController.popBackStack() })
+        composable(
+            ROUTE_RULE_CREATE,
+            arguments = listOf(navArgument("targetType") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val typeName = backStackEntry.arguments?.getString("targetType")
+            val createType = typeName?.let { RuleTargetType.valueOf(it) }
+            RuleEditScreen(
+                ruleId = null,
+                createType = createType,
+                onBack = { navController.popBackStack() },
+                onDone = { navController.popBackStack() },
+            )
         }
         composable(
             ROUTE_RULE_EDIT,
             arguments = listOf(navArgument("ruleId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val ruleId = backStackEntry.arguments?.getString("ruleId")
-            RuleEditScreen(ruleId = ruleId, onDone = { navController.popBackStack() })
+            RuleEditScreen(
+                ruleId = ruleId,
+                createType = null,
+                onBack = { navController.popBackStack() },
+                onDone = { navController.popBackStack() },
+            )
         }
     }
 }

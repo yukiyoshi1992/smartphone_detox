@@ -17,8 +17,16 @@ fun isRuleActive(
     if (!rule.enabled) return false
     if (rule.requireHome && !isHome) return false
 
-    fun dayMatches(date: LocalDate): Boolean =
-        date.dayOfWeek in rule.daysOfWeek || (rule.includeHolidays && date in holidayDates)
+    fun dayMatches(date: LocalDate): Boolean {
+        val isHoliday = date in holidayDates
+        val dayOfWeekMatches = date.dayOfWeek in rule.daysOfWeek
+        return when (rule.holidayMode) {
+            HolidayMode.NORMAL -> dayOfWeekMatches
+            HolidayMode.INCLUDE -> dayOfWeekMatches || isHoliday
+            HolidayMode.EXCLUDE -> dayOfWeekMatches && !isHoliday
+            HolidayMode.ONLY -> isHoliday
+        }
+    }
 
     val time = now.toLocalTime()
     val today = now.toLocalDate()

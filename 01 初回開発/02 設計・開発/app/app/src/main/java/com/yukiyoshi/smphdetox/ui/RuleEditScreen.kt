@@ -1,9 +1,9 @@
 package com.yukiyoshi.smphdetox.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,8 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,34 +37,52 @@ import androidx.compose.ui.unit.dp
 import com.yukiyoshi.smphdetox.block.listLaunchableApps
 import com.yukiyoshi.smphdetox.rule.AppRule
 import com.yukiyoshi.smphdetox.rule.AppRuleSettings
+import com.yukiyoshi.smphdetox.rule.HolidayMode
 import com.yukiyoshi.smphdetox.rule.RuleTargetType
 import java.time.DayOfWeek
 import java.time.LocalTime
 
+private fun holidayModeLabel(mode: HolidayMode): String = when (mode) {
+    HolidayMode.NORMAL -> "通常（曜日のみ）"
+    HolidayMode.INCLUDE -> "祝日も含める"
+    HolidayMode.EXCLUDE -> "祝日は除く"
+    HolidayMode.ONLY -> "祝日のみ"
+}
+
+private val ALWAYS_START = LocalTime.of(0, 0)
+private val ALWAYS_END = LocalTime.of(23, 59)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RuleEditScreen(
     modifier: Modifier = Modifier,
     ruleId: String?,
+    createType: RuleTargetType?,
+    onBack: () -> Unit,
     onDone: () -> Unit,
 ) {
     val context = LocalContext.current
     val ruleSettings = remember { AppRuleSettings(context) }
     val existing = remember { ruleId?.let { ruleSettings.rule(it) } }
+    val targetType = existing?.targetType ?: createType ?: RuleTargetType.APP_BLOCK
 
     var label by remember { mutableStateOf(existing?.label ?: "") }
-    var targetType by remember { mutableStateOf(existing?.targetType ?: RuleTargetType.APP_BLOCK) }
     var targets by remember { mutableStateOf(existing?.targets ?: emptySet()) }
     var domainInput by remember { mutableStateOf("") }
-    var startTime by remember { mutableStateOf(existing?.startTime ?: LocalTime.of(0, 0)) }
-    var endTime by remember { mutableStateOf(existing?.endTime ?: LocalTime.of(23, 59)) }
+    var alwaysOn by remember {
+        mutableStateOf(existing == null || (existing.startTime == ALWAYS_START && existing.endTime == ALWAYS_END))
+    }
+    var startTime by remember { mutableStateOf(existing?.startTime ?: ALWAYS_START) }
+    var endTime by remember { mutableStateOf(existing?.endTime ?: ALWAYS_END) }
     var requireHome by remember { mutableStateOf(existing?.requireHome ?: false) }
-    var includeHolidays by remember { mutableStateOf(existing?.includeHolidays ?: false) }
+    var holidayMode by remember { mutableStateOf(existing?.holidayMode ?: HolidayMode.NORMAL) }
     val selectedDays = remember {
         mutableStateMapOf<DayOfWeek, Boolean>().apply {
             DayOfWeek.entries.forEach { put(it, existing?.daysOfWeek?.contains(it) ?: true) }
         }
     }
     var showAppPicker by remember { mutableStateOf(false) }
+    var appSearch by remember { mutableStateOf("") }
     val installedApps = remember { listLaunchableApps(context) }
 
     Column(
@@ -71,22 +91,14 @@ fun RuleEditScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text(text = if (existing == null) "ルールを新規作成" else "ルールを編集")
+        BackButtonRow(onBack)
+        Text(
+            text = (if (existing == null) "ルールを新規作成" else "ルールを編集") + "（${ruleTypeLabel(targetType)}）",
+            style = MaterialTheme.typography.titleMedium,
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(value = label, onValueChange = { label = it }, label = { Text(text = "ルール名") })
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "種類")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RuleTargetType.entries.forEach { type ->
-                FilterChip(
-                    selected = targetType == type,
-                    onClick = { targetType = type },
-                    label = { Text(text = ruleTypeLabel(type)) },
-                )
-            }
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
         when (targetType) {
@@ -135,31 +147,46 @@ fun RuleEditScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider()
-        Text(text = "適用する時間帯")
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TimePickerField(label = "開始", time = startTime) { startTime = it }
-            TimePickerField(label = "終了", time = endTime) { endTime = it }
+        Text(text = "適用する時間帯", style = MaterialTheme.typography.titleSmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = alwaysOn, onCheckedChange = { alwaysOn = it })
+            Text(text = "常時適用（時間帯を指定しない）")
+        }
+        if (!alwaysOn) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TimePickerField(label = "開始", time = startTime) { startTime = it }
+                TimePickerField(label = "終了", time = endTime) { endTime = it }
+            }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = requireHome, onCheckedChange = { requireHome = it })
             Text(text = "在宅時のみ有効")
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = includeHolidays, onCheckedChange = { includeHolidays = it })
-            Text(text = "祝日も含める（曜日指定に関わらず祝日なら適用）")
-        }
-        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "対象曜日", style = MaterialTheme.typography.titleSmall)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             DayOfWeek.entries.forEach { day ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = selectedDays[day] == true,
-                        onCheckedChange = { selectedDays[day] = it },
-                    )
-                    Text(text = day.name.take(3))
-                }
+                FilterChip(
+                    selected = selectedDays[day] == true,
+                    onClick = { selectedDays[day] = selectedDays[day] != true },
+                    label = { Text(text = day.name.take(3)) },
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "祝日の扱い", style = MaterialTheme.typography.titleSmall)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            HolidayMode.entries.forEach { mode ->
+                FilterChip(
+                    selected = holidayMode == mode,
+                    onClick = { holidayMode = mode },
+                    label = { Text(text = holidayModeLabel(mode)) },
+                )
             }
         }
 
@@ -171,11 +198,11 @@ fun RuleEditScreen(
                     label = label,
                     targetType = targetType,
                     targets = targets,
-                    startTime = startTime,
-                    endTime = endTime,
+                    startTime = if (alwaysOn) ALWAYS_START else startTime,
+                    endTime = if (alwaysOn) ALWAYS_END else endTime,
                     daysOfWeek = selectedDays.filterValues { it }.keys,
                     requireHome = requireHome,
-                    includeHolidays = includeHolidays,
+                    holidayMode = holidayMode,
                     enabled = existing?.enabled ?: true,
                 )
                 if (existing == null) {
@@ -205,22 +232,35 @@ fun RuleEditScreen(
             onDismissRequest = { showAppPicker = false },
             title = { Text(text = "アプリを選択") },
             text = {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(installedApps) { app ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    targets = if (app.packageName in targets) {
-                                        targets - app.packageName
-                                    } else {
-                                        targets + app.packageName
+                Column {
+                    OutlinedTextField(
+                        value = appSearch,
+                        onValueChange = { appSearch = it },
+                        label = { Text(text = "検索") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    val filtered = installedApps.filter {
+                        appSearch.isBlank() ||
+                            it.label.contains(appSearch, ignoreCase = true) ||
+                            it.packageName.contains(appSearch, ignoreCase = true)
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(filtered) { app ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        targets = if (app.packageName in targets) {
+                                            targets - app.packageName
+                                        } else {
+                                            targets + app.packageName
+                                        }
                                     }
-                                }
-                                .padding(8.dp),
-                        ) {
-                            val marker = if (app.packageName in targets) "✓ " else ""
-                            Text(text = "$marker${app.label}")
+                                    .padding(8.dp),
+                            ) {
+                                val marker = if (app.packageName in targets) "✓ " else ""
+                                Text(text = "$marker${app.label}")
+                            }
                         }
                     }
                 }

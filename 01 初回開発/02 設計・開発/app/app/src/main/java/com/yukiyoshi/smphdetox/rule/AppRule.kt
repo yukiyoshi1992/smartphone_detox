@@ -7,6 +7,15 @@ import java.util.UUID
 enum class RuleTargetType { APP_BLOCK, SITE_BLOCK, NOTIFICATION }
 
 /**
+ * 祝日の扱い。
+ * NORMAL: 祝日を特別扱いしない（曜日指定のみで判定）
+ * INCLUDE: 曜日指定に加えて、祝日であれば曜日に関わらず適用
+ * EXCLUDE: 曜日指定に該当しても、祝日であれば適用しない（平日のみ・祝日を除く）
+ * ONLY: 曜日指定を無視し、祝日のときだけ適用
+ */
+enum class HolidayMode { NORMAL, INCLUDE, EXCLUDE, ONLY }
+
+/**
  * 1つのルールが「何を」（ブロック対象アプリ・サイト、または通知マナーモード）
  * 「いつ」（曜日・時間帯・在宅条件・祝日）適用するかをすべて持つ。
  * targetsはAPP_BLOCKならパッケージ名、SITE_BLOCKならURLに含まれる文字列。
@@ -21,7 +30,7 @@ data class AppRule(
     val endTime: LocalTime,
     val daysOfWeek: Set<DayOfWeek>,
     val requireHome: Boolean,
-    val includeHolidays: Boolean = false,
+    val holidayMode: HolidayMode = HolidayMode.NORMAL,
     val enabled: Boolean = true,
 ) {
     fun encode(): String {
@@ -34,7 +43,7 @@ data class AppRule(
             endTime.toString(),
             daysOfWeek.joinToString(",") { it.name },
             requireHome.toString(),
-            includeHolidays.toString(),
+            holidayMode.name,
             enabled.toString(),
         ).joinToString(";")
     }
@@ -53,7 +62,7 @@ data class AppRule(
                     endTime = LocalTime.parse(parts[5]),
                     daysOfWeek = parts[6].split(",").filter { it.isNotBlank() }.map { DayOfWeek.valueOf(it) }.toSet(),
                     requireHome = parts[7].toBoolean(),
-                    includeHolidays = parts[8].toBoolean(),
+                    holidayMode = HolidayMode.valueOf(parts[8]),
                     enabled = parts[9].toBoolean(),
                 )
             } catch (e: Exception) {

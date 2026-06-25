@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,7 +37,12 @@ import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
 import com.yukiyoshi.smphdetox.notification.hasNotificationPolicyAccess
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
+private fun SectionTitle(text: String) {
+    Text(text = text, style = MaterialTheme.typography.titleMedium)
+}
+
+@Composable
+fun SettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val context = LocalContext.current
     val settings = remember { HomeWifiSettings(context) }
     var homeSsids by remember { mutableStateOf(settings.homeSsids) }
@@ -72,10 +78,12 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "設定")
+        BackButtonRow(onBack)
+        Text(text = "設定", style = MaterialTheme.typography.titleLarge)
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "アクセシビリティ")
+        HorizontalDivider()
+        SectionTitle("アクセシビリティ（アプリ・サイトブロックに必要）")
         Button(onClick = {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }) {
@@ -84,7 +92,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
-        Text(text = "通知")
+        SectionTitle("通知（マナーモード自動切替に必要）")
         if (!hasNotificationAccess) {
             Button(onClick = {
                 context.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
@@ -98,7 +106,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
-        Text(text = "自宅Wi-FiのSSID（複数登録可）")
+        SectionTitle("自宅Wi-Fi（在宅判定に使うSSID、複数登録可）")
         homeSsids.forEach { ssid ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = ssid)
@@ -138,6 +146,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider()
+        SectionTitle("在宅状態の確認")
         Button(onClick = { refreshStatus() }) {
             Text(text = "在宅状態を確認")
         }

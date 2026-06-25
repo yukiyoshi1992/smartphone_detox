@@ -14,10 +14,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,25 +29,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.yukiyoshi.smphdetox.rule.AppRuleSettings
+import com.yukiyoshi.smphdetox.rule.RuleTargetType
+
+private val TABS = listOf(
+    RuleTargetType.APP_BLOCK to "アプリブロック",
+    RuleTargetType.SITE_BLOCK to "サイトブロック",
+    RuleTargetType.NOTIFICATION to "通知",
+)
 
 @Composable
 fun RuleManagementScreen(
     modifier: Modifier = Modifier,
-    onCreateRule: () -> Unit,
+    onBack: () -> Unit,
+    onCreateRule: (RuleTargetType) -> Unit,
     onEditRule: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val ruleSettings = remember { AppRuleSettings(context) }
     var rules by remember { mutableStateOf(ruleSettings.rules) }
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val currentType = TABS[selectedTab].first
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
+        BackButtonRow(onBack)
         Text(text = "ルール管理")
+
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onCreateRule) {
+        TabRow(selectedTabIndex = selectedTab) {
+            TABS.forEachIndexed { index, (_, label) ->
+                Tab(selected = selectedTab == index, onClick = { selectedTab = index }) {
+                    Text(text = label, modifier = Modifier.padding(12.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = { onCreateRule(currentType) }) {
             Text(text = "新規作成")
         }
 
@@ -52,7 +76,7 @@ fun RuleManagementScreen(
         HorizontalDivider()
 
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            rules.forEach { rule ->
+            rules.filter { it.targetType == currentType }.forEach { rule ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -60,14 +84,12 @@ fun RuleManagementScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Column(
+                    Text(
+                        text = rule.label,
                         modifier = Modifier
                             .weight(1f)
                             .clickable { onEditRule(rule.id) },
-                    ) {
-                        Text(text = rule.label)
-                        Text(text = ruleTypeLabel(rule.targetType))
-                    }
+                    )
                     Switch(
                         checked = rule.enabled,
                         onCheckedChange = {
