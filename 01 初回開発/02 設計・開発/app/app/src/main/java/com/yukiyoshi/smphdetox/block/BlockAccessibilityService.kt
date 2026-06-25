@@ -1,6 +1,7 @@
 package com.yukiyoshi.smphdetox.block
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.yukiyoshi.smphdetox.holiday.HolidayRepository
@@ -85,4 +86,10 @@ class BlockAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {}
+
+    /** ユーザーが設定でOFFにした、またはOSが自動的に無効化した場合に呼ばれる。即座に通知する。 */
+    override fun onUnbind(intent: Intent?): Boolean {
+        AccessibilityWatchdog(applicationContext).checkAndNotifyIfDisabled(applicationContext)
+        return super.onUnbind(intent)
+    }
 }

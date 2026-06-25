@@ -56,11 +56,23 @@ fun SettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         )
     }
     var hasNotificationAccess by remember { mutableStateOf(hasNotificationPolicyAccess(context)) }
+    var hasPostNotificationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
     var statusText by remember { mutableStateOf("未確認") }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> hasLocationPermission = granted }
+
+    val postNotificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> hasPostNotificationPermission = granted }
 
     fun refreshStatus() {
         statusText = when {
@@ -88,6 +100,20 @@ fun SettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }) {
             Text(text = "アクセシビリティ設定を開く")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        SectionTitle("アクセシビリティ無効化の通知")
+        Text(text = "アクセシビリティが無効になった際に通知でお知らせします。OSが自動で無効化してしまうことがあるため、気づかないまま放置を防げます。")
+        if (!hasPostNotificationPermission) {
+            Button(onClick = {
+                postNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }) {
+                Text(text = "通知の権限を許可する")
+            }
+        } else {
+            Text(text = "通知の権限: 許可済み")
         }
 
         Spacer(modifier = Modifier.height(24.dp))

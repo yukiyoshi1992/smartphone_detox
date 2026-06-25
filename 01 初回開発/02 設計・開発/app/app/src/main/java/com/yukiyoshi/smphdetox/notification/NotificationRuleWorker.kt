@@ -8,6 +8,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.yukiyoshi.smphdetox.block.AccessibilityWatchdog
 import com.yukiyoshi.smphdetox.block.AppMasterSettings
 import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
@@ -29,6 +30,7 @@ class NotificationRuleWorker(context: Context, params: WorkerParameters) : Corou
 
     override suspend fun doWork(): Result {
         val context = applicationContext
+        AccessibilityWatchdog(context).checkAndNotifyIfDisabled(context)
         if (!AppMasterSettings(context).enabled) return Result.success()
 
         val ruleSettings = AppRuleSettings(context)
