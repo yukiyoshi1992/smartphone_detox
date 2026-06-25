@@ -105,12 +105,18 @@
   - NASパス側で作業・commit&push済み。
   - ユーザーがビルド時にエラー報告：`accessibility_service_config.xml`の`android:accessibilityFlags`属性値`retrieveInteractiveWindows`が不正（正しいフラグ名は`flagRetrieveInteractiveWindows`、Claudeの記述ミス）。修正してcommit&push済み。
   - ユーザーが再度`git pull`・ビルド・実機確認 → **成功**。YouTubeアプリを開くと即座にホーム画面に戻ることを確認。**実装順序①完了。**
+- ユーザーから「進めて」の承認を受け、**実装順序②（Wi-Fi在宅判定）を実装**：
+  - `home/HomeWifiSettings.kt`新規作成：自宅Wi-FiのSSIDをSharedPreferencesに保存・読込。
+  - `home/HomeWifiStatus.kt`新規作成：`ConnectivityManager`/`NetworkCapabilities`から現在接続中のWi-FiのSSIDを取得し（`WifiInfo`経由）、登録した自宅SSIDと一致するか判定する`isHomeWifiConnected()`。
+  - `AndroidManifest.xml`に`ACCESS_WIFI_STATE`・`ACCESS_FINE_LOCATION`権限を追加（SSID取得には位置情報権限が必要なAndroidの仕様）。
+  - `MainActivity.kt`を更新：自宅SSID入力欄＋保存ボタン、位置情報権限のランタイムリクエストボタン、「在宅状態を確認」ボタンと状態表示テキストを追加。
+  - NASパス側で作業・commit&push済み。**ユーザー側はローカルクローンで`git pull`してビルド・実機確認が必要、まだ未実施。**
 
 ### 次にやること（次セッション/次タスク最優先）
-1. **実装順序②に着手**：Wi-Fi在宅判定（自宅SSID接続検知）。**ここから継続。**
-2. その後③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
-3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。Android関連ファイルを編集する際は、どちらの作業ツリーで編集したか・pull/push済みかを都度確認すること（取り違えると変更が消える/競合するリスクがある）。
-4. XML属性値などAndroid SDKの正確な仕様が必要な箇所は、記述前に可能な範囲で公式ドキュメント表記を確認し、今回のような単純なタイプミスを減らすこと。
+1. ユーザーにローカルクローンで`git pull`してもらい、ビルド・実機確認を依頼する。**ここから継続。** 自宅Wi-Fiに接続した状態とそうでない状態の両方で「在宅状態を確認」ボタンを押し、正しく判定されるか確認してもらう。
+2. 動作確認できたら、③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
+3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
+4. XML属性値などAndroid SDKの正確な仕様が必要な箇所は、記述前に可能な範囲で公式ドキュメント表記を確認し、タイプミスを減らすこと（実装順序①でのフラグ名ミスの教訓）。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
