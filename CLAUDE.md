@@ -79,6 +79,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 - **実装順序④完了**：`BlockAccessibilityService`にBrave/Chromeのアドレスバー検知を追加（`com.android.chrome:id/url_bar`等のリソースIDを読み取り、ブロック対象ドメインに該当すればホームに戻す）。ブロック対象アプリ・サイトはハードコードを廃止し、`BlockSettings`（SharedPreferences）＋`BlockSettingsSection`（UI、インストール済みアプリから選択して追加）で管理するように変更。
 - **実装順序⑤完了**：`notification`パッケージに通知マナーモード自動切替を実装（`RingerModeController`：`ACCESS_NOTIFICATION_POLICY`権限チェック＋リンガーモード切替、`NotificationRuleSection`：通知専用の時間帯ルールUI、ブロック用ルールと同じ`TimeRuleForm`/`RuleEngine`を再利用し`RuleSettings`の保存先のみ分離）。
 - **実装順序⑥完了**：`holiday`パッケージに祝日API連携を実装（`HolidayRepository`：holidays-jp公開APIから祝日一覧を取得しSharedPreferencesにキャッシュ、取得失敗時は既存キャッシュを使い続ける）。`TimeRule.includeHolidays`を追加し、ONにすると曜日指定に関わらず祝日ならルールが適用される。ブロック用・通知用の両ルール画面表示時に`refreshIfStale()`で自動更新。
-- **①～⑥すべて実装済み。実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは追加済みだが「結果：未実施」が多数残っている状態）。
+- **①～⑥すべて実装済み**。モンキーテスト前にユーザーから「どう使えばいいかわからないので画面を分けてほしい」との要望があり、**Navigation Composeを導入して3画面構成に再編**：
+  - TOP画面（`ui/TopScreen.kt`）：設定・ルール管理への遷移ボタン、ブロック機能全体ON/OFFスイッチ（`block/AppMasterSettings.kt`、BlockAccessibilityServiceがOFF中は何もしない）、在宅状況・アクセシビリティ許可状況（`block/AccessibilityStatus.kt`）の表示
+  - 設定画面（`ui/SettingsScreen.kt`）：アクセシビリティ設定、Wi-Fi登録・在宅確認（旧MainActivity直書きの内容を移動）
+  - ルール管理画面（`ui/RuleManagementScreen.kt`）：タブで「ブロック」（時間帯ルール＋ブロック対象アプリ・サイト）／「通知」（通知ルール）を切替。各ルール一覧に有効/無効の`Switch`を追加（`TimeRule.enabled`、削除せず一時停止できる）
+  - `ui/AppNavHost.kt`でルーティング、`MainActivity.kt`はNavHostを呼ぶだけに簡素化
+- **実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは追加済みだが「結果：未実施」が多数残っている状態）。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。

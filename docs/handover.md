@@ -137,16 +137,27 @@
   - **④Brave/ChromeのURL検知**：`block/BlockAccessibilityService.kt`にBROWSER_URL_BAR_IDSマップ（`com.android.chrome:id/url_bar`等）を追加し、対象ブラウザのアドレスバーノードを`findAccessibilityNodeInfosByViewId`で取得してテキストを判定。accessibility_service_configのeventTypesに`typeWindowContentChanged`を追加（同一画面内でのURL変化を検知するため）。ブロック対象アプリ・サイトはこれまでハードコード（YouTubeのみ）だったが、`block/BlockSettings.kt`（SharedPreferences）＋`block/BlockSettingsSection.kt`（UI）に変更し、`block/InstalledApps.kt`でインストール済みアプリ一覧から選択して追加できるようにした（Manifestに`<queries>`でACTION_MAIN/CATEGORY_LAUNCHERを宣言、QUERY_ALL_PACKAGES権限は不要な方式）。
   - **⑤通知マナーモード自動切替**：時間帯×在宅条件のルール機構をブロック用と共通化するため、ルール追加フォームを`rule/TimeRuleForm.kt`に抽出し、`rule/RuleSettings.kt`を保存先（SharedPreferencesファイル名）パラメータ化。`notification/RingerModeController.kt`でACCESS_NOTIFICATION_POLICY権限チェック＋`AudioManager.ringerMode`切替、`notification/NotificationRuleSection.kt`で通知専用ルールのUIと「今のルールを適用」ボタンを実装。
   - **⑥祝日API連携**：`holiday/HolidayRepository.kt`でholidays-jp公開API（`https://holidays-jp.github.io/api/v1/date.json`）から祝日一覧を取得し、SharedPreferencesにキャッシュ（取得失敗時は既存キャッシュを使い続ける）。`rule/TimeRule.kt`に`includeHolidays`フィールドを追加（encode/decodeも更新）、`rule/RuleEngine.kt`の判定ロジックに祝日集合を組み込み、ONなら曜日指定に関わらず祝日でも有効と判定。ブロック用・通知用の両ルール画面で表示時に`LaunchedEffect(Unit) { holidayRepository.refreshIfStale() }`で自動更新。INTERNET権限とkotlinx-coroutines-android依存を追加。
-  - commit&push済み（④⑤⑥それぞれ個別コミット）。UATシナリオのカテゴリC/D/Eを「実装待ち」→「実施可能」に更新し、新しいUI操作手順（アプリ選択追加、祝日チェックボックス、通知権限ボタン等）を反映。**①～⑥すべて実装済み、ユーザー側でのまとめてビルド・モンキーテストはこれから。**
+  - commit&push済み（④⑤⑥それぞれ個別コミット）。UATシナリオのカテゴリC/D/Eを「実装待ち」→「実施可能」に更新し、新しいUI操作手順（アプリ選択追加、祝日チェックボックス、通知権限ボタン等）を反映。**①～⑥すべて実装済み。**
+  - モンキーテストを依頼したところ、ユーザーから「最初に画面を分けてほしいな。どう使えばいいかわからないので」と要望。具体的な画面構成の指定あり：TOP画面（各画面への遷移ボタン・全体ON/OFF・動作状況表示）／設定画面（アクセシビリティ設定・Wi-Fi/在宅確認）／ルール管理画面（ルール一覧＝名前＋有効/無効、ルール作成・編集）。
+  - **対処（モンキーテスト前にUI整理を先に実施）**：`androidx.navigation:navigation-compose`を追加し3画面に分割。
+    - `ui/TopScreen.kt`：設定・ルール管理への遷移ボタン、ブロック機能全体ON/OFFスイッチ、在宅状況・アクセシビリティ許可状況の表示（`LaunchedEffect(Unit)`で画面再訪時に再チェック）。
+    - `ui/SettingsScreen.kt`：旧MainActivity直書きだったアクセシビリティ設定・Wi-Fi登録/在宅確認をそのまま移動。
+    - `ui/RuleManagementScreen.kt`：`TabRow`で「ブロック」（`RuleSection`＋`BlockSettingsSection`）／「通知」（`NotificationRuleSection`）を切替。
+    - `ui/AppNavHost.kt`：3画面のルーティング。`MainActivity.kt`はNavHostを呼ぶだけに簡素化。
+    - ユーザーが指定した「ルール一覧＝ルール名＋有効/無効」を実現するため、`TimeRule`に`enabled: Boolean`を追加（encode/decodeも8項目に拡張）し、`RuleEngine.isRuleActive()`で`!rule.enabled`なら即falseに。`RuleSettings.updateRule()`を追加し、ルール一覧の各行に`Switch`を置いて手動ON/OFFできるように（削除しなくても一時停止できる、アラームアプリのトグルと同じ発想）。
+    - TOP画面の「全体ON/OFF」は要件にあった「ON/OFF切替は即時（摩擦なし）」の実装でもある：`block/AppMasterSettings.kt`（SharedPreferencesのBoolean）を新設し、`BlockAccessibilityService.onAccessibilityEvent()`の先頭でOFFなら即return。
+    - アクセシビリティ許可状況の表示用に`block/AccessibilityStatus.kt`（`Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES`を文字列照合）を追加。
+  - commit&push済み。**ユーザー側の再ビルド・確認待ち。画面分割後にあらためてモンキーテストへ進む想定。**
 
 ### 次にやること（次セッション/次タスク最優先）
-1. **ユーザーに`git pull`して再ビルドしてもらい、一通りモンキーテストしてもらう。**洗い出された不具合・UI課題はここから個別に対応する。**ここから継続。**
-2. モンキーテストで指摘されたUI整理（Wi-Fi/GPS設定画面と管理画面の分割など、画面が縦に長くなりすぎている問題）にまとめて対応する。
+1. **ユーザーに`git pull`して再ビルドしてもらい、3画面構成になっているか・使いやすくなったかを確認してもらう。**ここから継続。
+2. 確認OKなら、当初の予定どおり一通りモンキーテストしてもらい、洗い出された不具合・UI課題に個別対応する。
 3. UATシナリオ（`01 初回開発/03 UAT/UATシナリオ.md`）の「結果：未実施」になっているケースを、モンキーテストの結果に応じてOK/NGで更新していく。
 4. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
 5. **新しいAndroid権限やAPIを使う際は、Manifestへの宣言漏れ・機種依存のAPI挙動差がないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ・機種依存のSSID取得不具合、と続けて実機検証まで進んでようやく発覚した教訓）。
 6. **テキスト手入力よりも、選択式UI（TimePicker、ドロップダウン等）を最初から優先する**——時刻入力で手入力を選んだ結果ユーザーから「打ちにくい」と指摘され手戻りになった。今後同様の入力項目（日付・時刻・定型選択肢など）はテキスト入力より先に選択式UIを検討すること。
 7. **Brave/ChromeのアドレスバーリソースID（`url_bar`）は未実機検証**——両ブラウザともChromiumベースなので同名のはずだが、実際に動くかはモンキーテストで要確認。動かない場合はlogcatでビュー階層を確認し、実際のリソースIDに合わせて`BROWSER_URL_BAR_IDS`を調整する。
+8. **画面構成のような「使い方が分かるか」というUI構造の指摘は、機能実装そのものより先に確認すべき観点**——機能を一通り実装してからモンキーテストする方針に変えた直後でも、画面構造（迷わず使えるか）はユーザーから見て最初に気になる点だった。次に大きめの機能群を作るときも、個々の機能より先に「画面・ナビゲーション構造」を一度提示して確認する方が手戻りが少ないかもしれない。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
