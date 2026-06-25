@@ -83,6 +83,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
   - **ルールモデルは`rule/AppRule.kt`に統一**：1つのルールが`targetType`（APP_BLOCK/SITE_BLOCK/NOTIFICATION）と`targets`（パッケージ名またはドメイン文字列）を直接持つ。旧来の「グローバルなブロック対象リスト＋別管理の時間帯ルール」「ブロック用/通知用で別のルール保存先」という分離構造は廃止し、`rule/AppRuleSettings.kt`に一本化。祝日の扱いは`HolidayMode`enum（NORMAL/INCLUDE/EXCLUDE/ONLY）。
   - `block/BlockAccessibilityService.kt`が`rule/RuleEngine.kt`（曜日・時間帯・在宅・祝日判定）を使って今アクティブなAPP_BLOCK/SITE_BLOCKルールのtargetsを都度算出し、実際のブロック判定に使う（**以前はルールの時間帯条件がブロック動作に反映されておらず、登録した対象は常時ブロックされていた不備があり、2026-06-25に修正済み**）。診断用に`Log.d`（タグ`BlockAccessibility`）をブラウザイベント処理部に追加済み。
   - **ブロック実行は`GLOBAL_ACTION_BACK`を使用**（`blockCurrentScreen()`）。`GLOBAL_ACTION_HOME`はYouTube等Picture-in-Picture対応アプリを小窓化させるだけで閉じきれない不具合があり、2026-06-25に修正・ユーザー確認済み（OK）。
-- **2026-06-25時点でユーザーが「OKでした、あとは使ってみてですね」「13もOKだったよ」と発言、実運用フェーズに移行**。①～⑥の実装、画面分割、ルールモデル再設計、モンキーテスト課題13件対応、YouTube PiP化問題の修正、Braveサイトブロックの動作確認まで完了。既知の未解決issueは現時点でなし。UATシナリオは「結果：未実施」が一部残るが、強制完遂は急がず実運用の中で随時更新する方針。**ルールの保存形式が2026-06-25中に2回変わったため、それより前に作成したルールは画面に表示されない（再作成が必要）。**
+- **2026-06-25時点でユーザーが「OKでした、あとは使ってみてですね」「13もOKだったよ」と発言、実運用フェーズに移行**。①～⑥の実装、画面分割、ルールモデル再設計、モンキーテスト課題13件対応、YouTube PiP化問題の修正、Braveサイトブロックの動作確認まで完了。
+- **直後にユーザーから「致命的」な指摘**：通知ルールがTOP画面のボタン手動押下でしか評価されず、実用上意味がなかった。**`androidx.work:work-runtime-ktx`を導入し、`notification/NotificationRuleWorker.kt`で15分おきに通知ルールを自動評価・リンガーモード反映する仕組みを実装**（`SmphDetoxApplication.kt`の`onCreate()`でWorkManagerに定期実行を登録、`ExistingPeriodicWorkPolicy.KEEP`）。OPPO/ColorOS等の省電力機能が定期実行を妨げる可能性があるため、設定画面に「バッテリー最適化の設定を開く」ボタンを追加。**実機での自動切替の動作確認はこれから。**
+- UATシナリオは「結果：未実施」が一部残るが、強制完遂は急がず実運用の中で随時更新する方針。**ルールの保存形式が2026-06-25中に2回変わったため、それより前に作成したルールは画面に表示されない（再作成が必要）。**
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。

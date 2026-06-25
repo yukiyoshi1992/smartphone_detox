@@ -193,5 +193,10 @@
 10. **UIに手を加える際、診断用ログ（Log.d）を最初から仕込んでおく**——`BlockAccessibilityService`は外部から動作を観測する手段がなく、Log.d追加前は課題13の原因をlogcatだけで特定できなかった。追加後は逆にYouTube PiP問題の原因を一発で特定できた。AccessibilityServiceやバックグラウンド処理など「ユーザーが直接デバッグできない場所」のコードには、要所にLog.dを入れておくと手戻りが少ない（このプロジェクトで2回効果が実証された教訓）。
 11. **`performGlobalAction(GLOBAL_ACTION_HOME)`はPicture-in-Picture対応アプリを完全終了させず小窓化させるだけになる**——Android機能としての既知の制約。アプリブロック・ウィンドウを閉じる系の実装では`GLOBAL_ACTION_BACK`を使う（今回の修正で確定した方針、今後同種の実装をする際も踏襲する）。
 
+- ユーザーから「致命的なことに気づいたんだが、通知ルールは自動で設定されないのは意味がない。毎日その時間になったら自動的にマナーモードがオフにならないと」「（オンも、しかり）」と指摘。これまでの通知ルールはTOP画面の「通知ルールを今すぐ適用」ボタンを手動で押した時にしか評価されない仕様だったため、実用上意味がないとの正当な指摘。
+  - **対処**：`androidx.work:work-runtime-ktx`を導入し、`notification/NotificationRuleWorker.kt`（`CoroutineWorker`）で15分おきに通知ルールを評価しリンガーモードへ自動反映する仕組みを実装。`SmphDetoxApplication.kt`（新設、Manifestに`android:name`で登録）の`onCreate()`で`WorkManager.enqueueUniquePeriodicWork(..., ExistingPeriodicWorkPolicy.KEEP, ...)`によりアプリ起動時にスケジュール登録（重複登録されないようKEEPポリシー、再起動後もWorkManagerが自動的に再スケジュールする）。
+  - WorkManagerの定期実行は最短15分間隔の制約があり、Android（特にOPPO/ColorOSのような省電力に厳しい機種）のDoze/バックグラウンド制限により多少前後する可能性がある。これを踏まえ、設定画面に「バッテリー最適化の設定を開く」ボタンと説明文を追加（`Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS`を開き、ユーザーが手動で本アプリを除外する想定）。TOP画面の説明文も「自動実行されません」から「約15分おきに自動チェック」に変更。
+  - commit&push済み。**ユーザー側の再ビルド・実機での自動切替確認待ち**（特にOPPO機でのバッテリー最適化除外設定後に安定して動くか）。
+
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
