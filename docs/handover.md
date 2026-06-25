@@ -114,13 +114,16 @@
   - ユーザーから「自宅のWi-FiはAとGで二つ登録したい」との要望。複数SSID対応に変更：`HomeWifiSettings`を単一SSIDから`Set<String>`に変更、`MainActivity`に追加・削除UIを実装。commit&push済み。
   - ユーザーが`git pull`・ビルド後、「在宅状態を確認」ボタンを押すとアプリがクラッシュ。ユーザーがlogcatファイル（`01 初回開発/02 設計・開発/test/logcat.txt`）を共有してくれた。
   - **クラッシュ原因**：`java.lang.SecurityException: ConnectivityService: ... does not have android.permission.ACCESS_NETWORK_STATE.` — `ConnectivityManager.getActiveNetwork()`の呼び出しに必要な`ACCESS_NETWORK_STATE`権限をManifestへ宣言し忘れていた（Claudeの実装漏れ）。
-  - **対処**：`AndroidManifest.xml`に`ACCESS_NETWORK_STATE`権限を追加。commit&push済み。**ユーザー側の再ビルド・確認待ち。**
+  - **対処**：`AndroidManifest.xml`に`ACCESS_NETWORK_STATE`権限を追加。commit&push済み。
+  - ユーザーが再度確認 → クラッシュはしなくなったが、**実際に自宅Wi-Fi（`YandY-A`）接続中にも関わらず「非在宅」と判定される事象**を報告。共有された`logcat2.txt`は古いクラッシュのスタックトレースが残っていた可能性があり（logcatは履歴が溜まる）、決定的な手がかりではなかった。**原因未確定**——以下3点をユーザーに確認依頼中：(1) アプリに登録したSSID文字列が実際のSSID（`YandY-A`等）と完全一致しているか（短縮形「A」等を登録していないか）、(2) 位置情報権限を許可済みか、(3) 端末の位置情報（GPS）システム設定がONになっているか。**回答待ち。**
+  - ユーザーから「対応の隙間時間にUATシナリオを作っておいて」との依頼。`01 初回開発/03 UAT/UATシナリオ.md`を新規作成：カテゴリA（アクセシビリティ権限・アプリブロック）〜F（ON/OFF切替）まで要件定義に基づくテストケース一覧を作成。実装済み機能（UAT-A2のYouTubeブロック）はOK、調査中のUAT-B3（在宅判定）はNGとして記録、未実装機能は「実装待ち」として先行登録（実装が進むたびに追記・更新する運用）。
 
 ### 次にやること（次セッション/次タスク最優先）
-1. ユーザーにローカルクローンで`git pull`してもらい、再ビルド・実機確認を依頼する。**ここから継続。** クラッシュが直っているか、複数登録した自宅Wi-Fiのどちらでも「在宅中」と判定されるか確認してもらう。
-2. 動作確認できたら、③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
-3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
-4. **新しいAndroid権限（ACCESS_NETWORK_STATE等）やAPIを使う際は、Manifestへの宣言漏れがないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ、と2回連続で実機検証まで進んでようやく発覚した教訓）。
+1. ユーザーからの3点回答（SSID完全一致／位置情報権限／位置情報システム設定）を受けて、Wi-Fi在宅判定が「非在宅」と誤判定される原因を特定する。**ここから継続。**
+2. 解決したらUATシナリオのUAT-B3〜B5を実施・結果更新する。
+3. 動作確認できたら、③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。実装するたびにUATシナリオに該当ケースを追加・実施すること。
+4. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
+5. **新しいAndroid権限（ACCESS_NETWORK_STATE等）やAPIを使う際は、Manifestへの宣言漏れがないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ、と2回連続で実機検証まで進んでようやく発覚した教訓）。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。

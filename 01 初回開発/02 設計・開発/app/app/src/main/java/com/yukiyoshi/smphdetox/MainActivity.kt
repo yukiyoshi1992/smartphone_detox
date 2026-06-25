@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
+import com.yukiyoshi.smphdetox.home.currentWifiSsid
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
 import com.yukiyoshi.smphdetox.ui.theme.Smartphone_detoxTheme
 
@@ -115,6 +116,12 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             newSsidInput = ""
         }) {
             Text(text = "追加")
+        }
+        Button(onClick = {
+            currentWifiSsid(context)?.let { settings.addHomeSsid(it) }
+            homeSsids = settings.homeSsids
+        }) {
+            Text(text = "今接続中のWi-Fiを登録")
         }
 
         if (!hasLocationPermission) {
