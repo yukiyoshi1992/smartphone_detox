@@ -185,6 +185,10 @@
 8. **「Aの構成にしてほしい」という具体的な要望が来たら、その構成が暗黙的に意味する他の整合性も併せて検討する**——画面分割の要望が結果的にルールモデル自体の再設計にもつながった。次回も「これは他の似た画面/データにも展開すべきか」を一度確認・提案するとよい。
 9. **画面・ロジックの不具合報告は、口頭（Discordメッセージ）よりテキストファイル＋logcatのセット**でもらえると再現性・原因特定の精度が上がる（今回`課題１.txt`＋`logcat3.txt`の形式で13件まとめて共有された）。今後も「ファイルにまとめて」依頼があれば`test/`配下を確認する。
 10. **UIに手を加える際、診断用ログ（Log.d）を最初から仕込んでおく**——`BlockAccessibilityService`は外部から動作を観測する手段がなく、課題13の原因をlogcatだけで特定できなかった。AccessibilityServiceやバックグラウンド処理など「ユーザーが直接デバッグできない場所」のコードには、要所にLog.dを入れておくと手戻りが少ない。
+- ユーザーから追加報告：「youtubeが開けてしまう（変に小画面で開くけど）」＋`logcat4.txt`（全体機能をOFF→ONにした後に再現）。前回追加した`BlockAccessibility`タグのログが今回効果を発揮：`blocking app: com.google.android.youtube`が複数回正しく記録されており、**ブロック自体（ルール判定・イベント検知）は正常に動作していた**。問題は「ブロックの実行方法」側にあった。
+  - **原因**：YouTubeはPicture-in-Picture（PiP）対応アプリのため、`performGlobalAction(GLOBAL_ACTION_HOME)`を呼ぶと、システムが「ユーザーがホームボタンを押した」と解釈してYouTubeを完全終了させず小窓（PiP）に縮小するだけだった。これがユーザーの言う「変に小画面で開く」現象。
+  - **対処**：`BlockAccessibilityService.blockCurrentScreen()`を新設し、`GLOBAL_ACTION_HOME`を`GLOBAL_ACTION_BACK`に変更（BACKはPiPを誘発しない）。1回のBACKでルート画面まで戻りきれなくても、ブロック対象である限り後続の画面変化イベントで再度このメソッドが呼ばれるため、結果的に複数回backしたのと同じ効果でアプリ外まで戻る想定。commit&push済み。**ユーザー側の再ビルド・再確認待ち（YouTubeが完全に閉じる/ホームに戻るか、他のPiP対応アプリでも同様に直っているか）。**
+  - 課題13（Brave側のサイトブロック）は今回のログでは未検証（別シナリオ）。引き続き再現してlogcatの`BlockAccessibility`タグを確認してもらう必要あり。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
