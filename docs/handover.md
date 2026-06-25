@@ -97,10 +97,16 @@
   - ユーザーが再度Gradle Syncを実行 → **Sync自体は通った**。次にビルド（`assembleDebug`）でエラー：`checkDebugAarMetadata`が失敗、`androidx.core-ktx:1.19.0`等3つの依存ライブラリが「compileSdk 37以上が必要」と要求。プロジェクトは`compileSdk 36`（36.1）だったため不一致。
   - **対処**：`app/build.gradle.kts`の`compileSdk`を37に、`targetSdk`を36→37に変更（`minSdk=34`はそのまま）。ローカルクローン側で編集・commit・push、NASパス側でpullして同期済み。
   - ユーザーが再ビルド・実機実行 → **成功**。「Hello Android!!」画面が実機に表示されることを確認。最小構成のセットアップはこれで完了。
+- ユーザーから「進めて」の承認を受け、**実装順序①（AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移）を実装**：
+  - `block/BlockAccessibilityService.kt`新規作成：`TYPE_WINDOW_STATE_CHANGED`イベントでフォアグラウンドのパッケージ名を検知し、ブロック対象（現状`com.google.android.youtube`のみハードコード、後でルールエンジンから渡す想定）に該当すれば`performGlobalAction(GLOBAL_ACTION_HOME)`でホームに戻す。
+  - `res/xml/accessibility_service_config.xml`新規作成（サービス設定）、`strings.xml`にサービス説明文を追加。
+  - `AndroidManifest.xml`にサービスを登録（`BIND_ACCESSIBILITY_SERVICE`権限、`accessibilityservice`アクションのintent-filter）。
+  - `MainActivity.kt`を更新：「アクセシビリティ設定を開く」ボタンを追加（`Settings.ACTION_ACCESSIBILITY_SETTINGS`）——AccessibilityServiceはユーザーが手動で設定画面から有効化する必要があるため。
+  - NASパス側で作業・commit&push済み。**ユーザー側はローカルクローンで`git pull`してビルド・実機確認が必要、まだ未実施。**
 
 ### 次にやること（次セッション/次タスク最優先）
-1. **実装順序①に着手**：AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移（最小の動作確認）。**ここから継続。**
-2. その後②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
+1. ユーザーにローカルクローンで`git pull`してもらい、ビルド・実機確認を依頼する。**ここから継続。** 設定画面でアクセシビリティを有効化した上で、YouTubeアプリを開くと即座にホームに戻ることを確認してもらう。
+2. 動作確認できたら、②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
 3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。Android関連ファイルを編集する際は、どちらの作業ツリーで編集したか・pull/push済みかを都度確認すること（取り違えると変更が消える/競合するリスクがある）。
 
 ### 参考
