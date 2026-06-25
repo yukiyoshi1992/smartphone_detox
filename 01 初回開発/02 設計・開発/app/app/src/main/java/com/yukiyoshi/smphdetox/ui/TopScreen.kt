@@ -116,7 +116,7 @@ fun TopScreen(
         HorizontalDivider()
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "通知ルールは自動実行されません。下のボタンを押した時点の時間で\n通知ルールを判定し、マナーモード/通常モードを切り替えます。")
+        Text(text = "通知ルールは約15分おきに自動チェックされ、マナーモード/通常モードに\n自動で切り替わります（OSの省電力機能の影響で数分前後する場合があります）。\n下のボタンですぐに反映することもできます。")
         Button(onClick = {
             val isHome = isHomeWifiConnected(context, homeWifiSettings.homeSsids)
             val holidayDates = holidayRepository.cachedHolidayDates()

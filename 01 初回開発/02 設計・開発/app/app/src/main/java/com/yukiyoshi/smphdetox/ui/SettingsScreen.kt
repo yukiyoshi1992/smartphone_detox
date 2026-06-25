@@ -152,5 +152,15 @@ fun SettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             Text(text = "在宅状態を確認")
         }
         Text(text = "状態: $statusText")
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        SectionTitle("バッテリー最適化（通知ルールの自動実行に影響）")
+        Text(text = "この端末の省電力機能が原因で、通知ルールの自動チェックが遅れたり止まったりすることがあります。一覧から本アプリを探して「最適化しない」に設定してください。")
+        Button(onClick = {
+            context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+        }) {
+            Text(text = "バッテリー最適化の設定を開く")
+        }
     }
 }
