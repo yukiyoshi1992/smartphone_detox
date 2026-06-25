@@ -72,6 +72,7 @@ fun TimeRuleForm(homeCheckboxLabel: String = "在宅時のみ有効", onAddRule:
     var startTime by remember { mutableStateOf(LocalTime.of(22, 0)) }
     var endTime by remember { mutableStateOf(LocalTime.of(6, 0)) }
     var requireHome by remember { mutableStateOf(true) }
+    var includeHolidays by remember { mutableStateOf(false) }
     val selectedDays = remember {
         mutableStateMapOf<DayOfWeek, Boolean>().apply {
             DayOfWeek.entries.forEach { put(it, true) }
@@ -102,6 +103,10 @@ fun TimeRuleForm(homeCheckboxLabel: String = "在宅時のみ有効", onAddRule:
                 }
             }
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = includeHolidays, onCheckedChange = { includeHolidays = it })
+            Text(text = "祝日も含める（曜日指定に関わらず祝日なら適用）")
+        }
         Button(onClick = {
             if (label.isNotBlank()) {
                 onAddRule(
@@ -111,6 +116,7 @@ fun TimeRuleForm(homeCheckboxLabel: String = "在宅時のみ有効", onAddRule:
                         endTime = endTime,
                         daysOfWeek = selectedDays.filterValues { it }.keys,
                         requireHome = requireHome,
+                        includeHolidays = includeHolidays,
                     )
                 )
                 label = ""
