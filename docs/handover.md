@@ -96,13 +96,12 @@
   - CLAUDE.mdに実績を反映、commit&push済み。
   - ユーザーが再度Gradle Syncを実行 → **Sync自体は通った**。次にビルド（`assembleDebug`）でエラー：`checkDebugAarMetadata`が失敗、`androidx.core-ktx:1.19.0`等3つの依存ライブラリが「compileSdk 37以上が必要」と要求。プロジェクトは`compileSdk 36`（36.1）だったため不一致。
   - **対処**：`app/build.gradle.kts`の`compileSdk`を37に、`targetSdk`を36→37に変更（`minSdk=34`はそのまま）。ローカルクローン側で編集・commit・push、NASパス側でpullして同期済み。
-  - **ユーザーに再ビルドを依頼予定。結果待ち。**（compileSdk 37のSDK Platformがインストールされていない場合、Android StudioのSDK Managerでのインストールが追加で必要になる可能性あり——エラーが出たら案内する）
+  - ユーザーが再ビルド・実機実行 → **成功**。「Hello Android!!」画面が実機に表示されることを確認。最小構成のセットアップはこれで完了。
 
 ### 次にやること（次セッション/次タスク最優先）
-1. ユーザーに再ビルド（assembleDebugまたは実行ボタン）を試してもらい、解消したか確認する。**ここから継続。** SDK Platform 37未インストールのエラーが出た場合はSDK Managerでのインストール手順を案内する。
-2. ビルドが通ったら、最小構成（空のCompose画面）が実機/エミュレータで起動できることを確認してもらう。
-3. 実装順序の提案（要相談）：①AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移（最小の動作確認）→②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、のように小さく動くものを積み上げていく前回PJのパターンを踏襲する想定。
-4. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。Android関連ファイルを編集する際は、どちらの作業ツリーで編集したか・pull/push済みかを都度確認すること（取り違えると変更が消える/競合するリスクがある）。
+1. **実装順序①に着手**：AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移（最小の動作確認）。**ここから継続。**
+2. その後②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、の順に小さく動くものを積み上げていく（前回PJのパターンを踏襲）。
+3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。Android関連ファイルを編集する際は、どちらの作業ツリーで編集したか・pull/push済みかを都度確認すること（取り違えると変更が消える/競合するリスクがある）。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。

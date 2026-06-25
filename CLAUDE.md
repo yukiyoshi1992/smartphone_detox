@@ -70,7 +70,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 ## Current status (2026-06-25)
 
 - **要件定義・技術方針ともに全項目確定**。`01 初回開発/01 要件/要件定義.md`（確定版まとめ＋Mermaidアーキテクチャ図）を作成済み。
-- **実装着手フェーズ**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、Compose Empty Activity、`minSdk=34`/`compileSdk・targetSdk=37`）。日本語パスのGradleエラーは解消済み（上記「開発環境・git運用」参照）。compileSdk不足によるビルドエラー（`androidx.core-ktx`等がcompileSdk 37要求）も37への更新で対処済み。commit&push済み、NASパス側もpull済み。次はビルドが通って空のCompose画面が起動できるかユーザーに確認してもらう。
+- **実装着手フェーズ**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、Compose Empty Activity、`minSdk=34`/`compileSdk・targetSdk=37`）。日本語パスのGradleエラー・compileSdk不足エラーは解消済み（上記「開発環境・git運用」参照）。**実機での起動を確認済み**（"Hello Android!!"画面が表示された）。次は実装順序①（AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移）に着手する段階。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
 - 設計・実装はまだ未着手。
