@@ -84,9 +84,17 @@
   - CLAUDE.mdのRequirements欄をこのファイルへのポインタに簡略化（めも.txtの内容をそのまま転記する形から、正本を参照する形に変更）。
   - commit&push予定。
 
+- ユーザーから「設計・実装に進んでください、Android Studio起動します。プロジェクト作成回り・git連携周りの手順を案内して」との依頼。
+  - 前回PJと同じ理由（NAS共有フォルダ上のGradleビルドが不安定）で、`C:\Users\yukiy\dev\smartphone_detox`にGitHubリモートからclone済み（Bashで実施）。
+  - Android StudioでのNew Project手順（保存先：クローン内`01 初回開発/02 設計・開発/app`、パッケージ名候補`com.yukiyoshi.smphdetox`、Kotlin、Minimum SDKは端末のバージョンに合わせる）をDiscordで案内。
+  - git運用ルールも案内：**ユーザーは作業前に必ず`git pull`**（Claude側のNASパス編集を取り込むため）、コミットしたら`push`してClaudeが次にpullする、という双方向の同期運用。NAS特有のビルドエラーが出た場合の対処（`gradle.properties`の`org.gradle.vfs.watch=false`等）も伝達済み。
+  - CLAUDE.mdに「開発環境・git運用」セクションを新設して反映、commit&push済み。
+  - **ユーザーがAndroid Studioでプロジェクト作成中。完了報告待ち。**
+
 ### 次にやること（次セッション/次タスク最優先）
-1. **実装着手**：Android Studioプロジェクトの作成（前回PJの`03 設計・開発/01 Androidアプリ開発/`の進め方を参考に、`01 初回開発/02 設計・開発/`配下に作成）。まずパッケージ名・最小構成（Compose空プロジェクト等）から始め、ユーザーに進め方を確認してから着手するのが安全。
+1. ユーザーからのAndroid Studioプロジェクト作成完了の報告を待ち、実装に着手する。**ここから継続。**
 2. 実装順序の提案（要相談）：①AccessibilityServiceでのフォアグラウンドアプリ検知＋ホーム遷移（最小の動作確認）→②Wi-Fi在宅判定→③ルールエンジン→④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携、のように小さく動くものを積み上げていく前回PJのパターンを踏襲する想定。
+3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。

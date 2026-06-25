@@ -28,6 +28,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 - `01 初回開発/01 要件/`：要件メモ・要件関連の検討資料（MVPメリデメ比較表もここ）
 - `01 初回開発/02 設計・開発/`：今後の設計・実装作業はここに置く（ユーザー指定）
 
+## 開発環境・git運用（2026-06-25、Android実装着手時に確定）
+
+前回PJ（Shogiban-kaiseki-appli）と同じ理由——**NASの共有フォルダ上で直接Gradleビルドすると不安定になる**（`Permission denied`等が頻発した既知の問題）——により、Android Studioでのビルド・実行は**ローカルディスクのクローン**から行う。
+
+- ローカルクローン：`C:\Users\yukiy\dev\smartphone_detox`（GitHubリモートから`git clone`済み）
+- Androidプロジェクトの作成場所：そのクローン内の`01 初回開発/02 設計・開発/app`（リポジトリルートではなくサブフォルダに置く——前回PJの`03 設計・開発/01 Androidアプリ開発/`と同じ考え方）
+- **2つの作業ツリーが存在する**：Claude（このNASパス上で直接編集）と、ユーザー（ローカルクローンでAndroid Studio操作）。GitHub remote経由で同期する：
+  - Claudeが作業する前：必要に応じてユーザー側の最新コミットをpullしているか確認（通常はClaudeが先行して作業することが多い）。
+  - ユーザーがAndroid Studio側で作業する前：**必ず`git pull`**してClaude側の変更を取り込む。
+  - ユーザーがコミットしたら`git push`し、Claudeは次の作業前にNASパス側で`git pull`して取り込む。
+- NAS特有のビルドエラー（`Permission denied`等）が出た場合の既知の対処（前回PJで実証済み）：`gradle.properties`に`org.gradle.vfs.watch=false`と`android.overridePathCheck=true`を追加。ただしローカルクローンから動かしていればそもそも発生しないはず。
+
 ## What this project is
 
 スマホデトックスを実現するスマホアプリ。自宅にいるとき（Wi-Fi/GPSでおおよそ判定）に、指定したサイト・アプリ（例：YouTubeアプリ、YouTubeサイト）へのアクセスをブロックする。アプリ上でON/OFFを即切替できる（一時的に必要になった場合に対応）。
@@ -58,7 +70,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 ## Current status (2026-06-25)
 
 - **要件定義・技術方針ともに全項目確定**。`01 初回開発/01 要件/要件定義.md`（確定版まとめ＋Mermaidアーキテクチャ図）を作成済み。
-- **次フェーズは実装着手**（Android Studioプロジェクト作成、`01 初回開発/02 設計・開発/`配下）。
+- **実装着手フェーズ**：ユーザーがAndroid Studioでプロジェクト作成中。ローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）作成済み、手順案内済み。プロジェクト作成完了の報告待ち。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
 - 設計・実装はまだ未着手。
