@@ -1,0 +1,5 @@
+セッションを引き継ぎたいです。
+
+CLAUDE.mdの更新と作業内容を要約してdocs/handover.mdを更新してください。
+別セッションでCLAUDE.mdとdocs/handover.mdを読めば、続きから作業を再開できるようにしたいです。
+またgitはcommit & pushして最新化しておいてください

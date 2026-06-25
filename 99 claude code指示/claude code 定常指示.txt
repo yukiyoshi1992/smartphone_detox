@@ -1,0 +1,14 @@
+script claude_log.txt
+cd //YukiYoshiNAS/Shogiban-kaiseki-appli
+claude --dangerously-skip-permissions --channels plugin:discord@claude-plugins-official
+
+===
+前回からの引継ぎ対応をお願いします。
+CLAUDE.mdとdocs/handover.mdを読めば内容が書いてあります。不明点は聞いてください。
+対応の内容が理解できたら、プロセスを提示して私に確認を取ってください。
+
+作業は1つ終わるごとにCLAUDE.mdとdocs/handover.mdを更新して、gitをcommit & pushし、
+セッションが切れても継続できるようにしてください。
+
+なおコミュニケーションは基本的にdiscordで取りたいので、
+一番最初にdiscordで相互通信確認をさせてください。（最優先）

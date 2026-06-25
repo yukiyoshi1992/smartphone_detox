@@ -1,0 +1,19 @@
+# OS
+Thumbs.db
+.DS_Store
+
+# Android (将来Androidアプリ開発を始めた場合に備えて)
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# Runtime / 実行時生成物
+00 runtime/
