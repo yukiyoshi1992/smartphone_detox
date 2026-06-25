@@ -9,7 +9,7 @@ import java.time.LocalDateTime
  * holidayDatesはHolidayRepository.cachedHolidayDates()を渡す想定（祝日を考慮しない場合は空集合でよい）。
  */
 fun isRuleActive(
-    rule: TimeRule,
+    rule: AppRule,
     now: LocalDateTime,
     isHome: Boolean,
     holidayDates: Set<LocalDate> = emptySet(),
@@ -34,8 +34,8 @@ fun isRuleActive(
 }
 
 fun activeRules(
-    rules: List<TimeRule>,
+    rules: List<AppRule>,
     now: LocalDateTime,
     isHome: Boolean,
     holidayDates: Set<LocalDate> = emptySet(),
-): List<TimeRule> = rules.filter { isRuleActive(it, now, isHome, holidayDates) }
+): List<AppRule> = rules.filter { isRuleActive(it, now, isHome, holidayDates) }

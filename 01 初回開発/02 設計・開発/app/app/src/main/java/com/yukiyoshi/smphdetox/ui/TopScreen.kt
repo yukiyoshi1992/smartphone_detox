@@ -26,8 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.block.AppMasterSettings
 import com.yukiyoshi.smphdetox.block.isBlockAccessibilityServiceEnabled
+import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
+import com.yukiyoshi.smphdetox.notification.applyRingerMode
+import com.yukiyoshi.smphdetox.rule.AppRuleSettings
+import com.yukiyoshi.smphdetox.rule.RuleTargetType
+import com.yukiyoshi.smphdetox.rule.activeRules
+import java.time.LocalDateTime
 
 @Composable
 fun TopScreen(
@@ -38,9 +44,12 @@ fun TopScreen(
     val context = LocalContext.current
     val masterSettings = remember { AppMasterSettings(context) }
     val homeWifiSettings = remember { HomeWifiSettings(context) }
+    val ruleSettings = remember { AppRuleSettings(context) }
+    val holidayRepository = remember { HolidayRepository(context) }
     var masterEnabled by remember { mutableStateOf(masterSettings.enabled) }
     var homeStatusText by remember { mutableStateOf("未確認") }
     var accessibilityEnabled by remember { mutableStateOf(false) }
+    var notificationStatusText by remember { mutableStateOf("未適用") }
 
     LaunchedEffect(Unit) {
         accessibilityEnabled = isBlockAccessibilityServiceEnabled(context)
@@ -82,6 +91,23 @@ fun TopScreen(
         Text(text = "在宅状況: $homeStatusText")
         Text(text = "アクセシビリティ: " + if (accessibilityEnabled) "許可済み" else "未許可")
         HorizontalDivider()
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = {
+            val isHome = isHomeWifiConnected(context, homeWifiSettings.homeSsids)
+            val holidayDates = holidayRepository.cachedHolidayDates()
+            val notificationRules = ruleSettings.rules.filter { it.targetType == RuleTargetType.NOTIFICATION }
+            val active = activeRules(notificationRules, LocalDateTime.now(), isHome, holidayDates)
+            val applied = applyRingerMode(context, quiet = active.isNotEmpty())
+            notificationStatusText = when {
+                !applied -> "通知へのアクセス権限が必要です（設定画面で許可してください）"
+                active.isEmpty() -> "対象ルールなし→通常モードに設定"
+                else -> "マナーモードに設定（該当: ${active.joinToString(", ") { it.label }}）"
+            }
+        }) {
+            Text(text = "通知ルールを今すぐ適用")
+        }
+        Text(text = notificationStatusText)
 
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onNavigateToSettings) {

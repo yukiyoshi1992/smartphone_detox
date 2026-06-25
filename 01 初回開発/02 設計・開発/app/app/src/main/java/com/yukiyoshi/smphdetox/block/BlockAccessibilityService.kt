@@ -2,6 +2,13 @@ package com.yukiyoshi.smphdetox.block
 
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
+import com.yukiyoshi.smphdetox.holiday.HolidayRepository
+import com.yukiyoshi.smphdetox.home.HomeWifiSettings
+import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
+import com.yukiyoshi.smphdetox.rule.AppRuleSettings
+import com.yukiyoshi.smphdetox.rule.RuleTargetType
+import com.yukiyoshi.smphdetox.rule.isRuleActive
+import java.time.LocalDateTime
 
 /** Brave/ChromeそれぞれのアドレスバーのリソースID（どちらもChromiumベースのため同名）。 */
 private val BROWSER_URL_BAR_IDS = mapOf(
@@ -11,19 +18,22 @@ private val BROWSER_URL_BAR_IDS = mapOf(
 
 /**
  * フォアグラウンドアプリ・Brave/ChromeのアドレスバーURLを検知し、
- * 設定済みのブロック対象（アプリ・サイト）に該当すればホーム画面に戻す。
+ * 現在有効なAPP_BLOCK/SITE_BLOCKルールに該当すればホーム画面に戻す。
+ * ルールの有効判定（曜日・時間帯・在宅条件・祝日）はrule.RuleEngineに委譲する。
  */
 class BlockAccessibilityService : AccessibilityService() {
 
-    private val settings by lazy { BlockSettings(applicationContext) }
     private val masterSettings by lazy { AppMasterSettings(applicationContext) }
+    private val ruleSettings by lazy { AppRuleSettings(applicationContext) }
+    private val homeWifiSettings by lazy { HomeWifiSettings(applicationContext) }
+    private val holidayRepository by lazy { HolidayRepository(applicationContext) }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (!masterSettings.enabled) return
         val packageName = event.packageName?.toString() ?: return
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
-            packageName in settings.blockedPackages
+            packageName in activeTargets(RuleTargetType.APP_BLOCK)
         ) {
             performGlobalAction(GLOBAL_ACTION_HOME)
             return
@@ -35,9 +45,19 @@ class BlockAccessibilityService : AccessibilityService() {
         if (!isBrowserEvent) return
 
         val url = currentAddressBarText(urlBarId) ?: return
-        if (settings.blockedDomains.any { url.contains(it, ignoreCase = true) }) {
+        if (activeTargets(RuleTargetType.SITE_BLOCK).any { url.contains(it, ignoreCase = true) }) {
             performGlobalAction(GLOBAL_ACTION_HOME)
         }
+    }
+
+    private fun activeTargets(type: RuleTargetType): Set<String> {
+        val isHome = isHomeWifiConnected(applicationContext, homeWifiSettings.homeSsids)
+        val holidayDates = holidayRepository.cachedHolidayDates()
+        val now = LocalDateTime.now()
+        return ruleSettings.rules
+            .filter { it.targetType == type && isRuleActive(it, now, isHome, holidayDates) }
+            .flatMap { it.targets }
+            .toSet()
     }
 
     private fun currentAddressBarText(urlBarId: String): String? {

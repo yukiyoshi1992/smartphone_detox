@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.currentWifiSsid
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
+import com.yukiyoshi.smphdetox.notification.hasNotificationPolicyAccess
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
@@ -48,6 +49,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             ) == PackageManager.PERMISSION_GRANTED,
         )
     }
+    var hasNotificationAccess by remember { mutableStateOf(hasNotificationPolicyAccess(context)) }
     var statusText by remember { mutableStateOf("未確認") }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -78,6 +80,20 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }) {
             Text(text = "アクセシビリティ設定を開く")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Text(text = "通知")
+        if (!hasNotificationAccess) {
+            Button(onClick = {
+                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                hasNotificationAccess = hasNotificationPolicyAccess(context)
+            }) {
+                Text(text = "通知へのアクセスを許可する")
+            }
+        } else {
+            Text(text = "通知へのアクセス: 許可済み")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
