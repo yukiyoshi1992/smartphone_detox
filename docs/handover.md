@@ -196,7 +196,12 @@
 - ユーザーから「致命的なことに気づいたんだが、通知ルールは自動で設定されないのは意味がない。毎日その時間になったら自動的にマナーモードがオフにならないと」「（オンも、しかり）」と指摘。これまでの通知ルールはTOP画面の「通知ルールを今すぐ適用」ボタンを手動で押した時にしか評価されない仕様だったため、実用上意味がないとの正当な指摘。
   - **対処**：`androidx.work:work-runtime-ktx`を導入し、`notification/NotificationRuleWorker.kt`（`CoroutineWorker`）で15分おきに通知ルールを評価しリンガーモードへ自動反映する仕組みを実装。`SmphDetoxApplication.kt`（新設、Manifestに`android:name`で登録）の`onCreate()`で`WorkManager.enqueueUniquePeriodicWork(..., ExistingPeriodicWorkPolicy.KEEP, ...)`によりアプリ起動時にスケジュール登録（重複登録されないようKEEPポリシー、再起動後もWorkManagerが自動的に再スケジュールする）。
   - WorkManagerの定期実行は最短15分間隔の制約があり、Android（特にOPPO/ColorOSのような省電力に厳しい機種）のDoze/バックグラウンド制限により多少前後する可能性がある。これを踏まえ、設定画面に「バッテリー最適化の設定を開く」ボタンと説明文を追加（`Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS`を開き、ユーザーが手動で本アプリを除外する想定）。TOP画面の説明文も「自動実行されません」から「約15分おきに自動チェック」に変更。
-  - commit&push済み。**ユーザー側の再ビルド・実機での自動切替確認待ち**（特にOPPO機でのバッテリー最適化除外設定後に安定して動くか）。
+  - commit&push済み。
+  - ユーザーから「むむむ、非同期処理がいるの？なぜリアルタイムで動かないんだ。せめて一分単位の監視は難しい？」と再指摘。15分はWorkManagerの定期実行に課されたOS側の最短間隔（バッテリー保護のための制約で、アプリ側の実装で短縮できるものではない）であることを説明しようとしたところ、ユーザーから類似アプリ（Google Play「manner_scheduler」）への言及あり：「これ使ってたけど、別に15分単位とかじゃなかったよ」「許可した制限は通知だけだね」「逆に通知がないと動作しないみたいだけど」「同じように通知制限のONだけで、リアルタイムでマナーモードが反映されるようにしてほしいな」。
+  - **対処（WorkManagerの定期実行をAlarmManagerの厳密アラームに置き換え）**：`notification/NotificationAlarmScheduler.kt`で、有効な通知ルールの開始/終了時刻（時:分、曜日は問わず）のうち直近のものを計算し`AlarmManager.setExactAndAllowWhileIdle()`で1回限りのアラームを予約。`notification/NotificationAlarmReceiver.kt`がアラーム発火時にルールを評価してリンガーモードに反映し、次の境界時刻を再計算して再度1回スケジュールし直す、を繰り返す方式（ポーリングではなく「次に起こすべき瞬間」だけを予約するので、ルール境界の瞬間に正確に切り替わる）。`notification/BootCompletedReceiver.kt`で再起動後の再スケジュールにも対応。
+  - **追加の権限要求はしない方針で実装**：Android 12+の厳密アラーム（`SCHEDULE_EXACT_ALARM`）はOS側で許可状態が変わりうるため、`canScheduleExactAlarms()`がfalseの場合は自動的に`setAndAllowWhileIdle()`（非厳密だが多くの場合十分実用的な精度）にフォールバックするコードにし、ユーザーには新たな許可ボタンを見せない。ユーザーが参考にした類似アプリも「通知へのアクセス」権限のみで動いているとのことで、それに合わせた。
+  - WorkManagerの15分ポーリング（`NotificationRuleWorker`）はそのまま残し、アラームが何らかの理由で発火しなかった場合の保険として併用する設計に。
+  - commit&push済み。**ユーザー側の再ビルド・実機での動作確認待ち**（ルール境界の瞬間にマナーモードが切り替わるか、厳密アラーム権限なしでも十分な精度が出るか）。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
