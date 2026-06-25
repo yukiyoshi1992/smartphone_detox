@@ -6,16 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 
 このプロジェクトはユーザーとDiscord経由でも連絡を取り合う運用（詳細は `docs/handover.md` 参照）。前回PJ（`\\YukiYoshiNAS\Shogiban-kaiseki-appli`）で、Discordツール（`reply`/`fetch_messages`等、`plugin:discord:discord`提供）が読み込まれない事象が繰り返し発生し、原因と対処法が確定済み。**毎セッション開始時、本格的な作業に入る前に必ず実行**すること（再調査は不要）。
 
-1. ToolSearchで`reply`/`fetch_messages`等のDiscordツールが読み込まれているか確認する。
-2. **読み込まれているかどうかに関わらず**、毎回必ずBashで次を実行する（依存モジュールの初回アクセス遅延を先払いし、MCP起動タイムアウト(30秒)を回避するため）：
+**2026-06-25確定：効いているのは「新しいターミナルセッションで始める」こと自体であり、bun warmupコマンドは必須ではなかった。** 前セッションで warmup を実行してもDiscordツールが読み込まれず、ユーザーにターミナル再起動を依頼した。その後ユーザーが新セッションを開始したところ、**warmupコマンドを一切実行せずに、最初のToolSearch呼び出しで`mcp__plugin_discord_discord__reply`が即座に読み込まれ、`reply`が初回から正常動作した**（このセッションで実証）。つまり再現性のある対処法は「新セッションを開始する」ことそのものであり、bun warmupは保険として残すが必須ではない。
+
+**実行手順（2026-06-25版）：**
+1. ToolSearchで`select:mcp__plugin_discord_discord__reply`等のDiscordツールが読み込まれているか確認する。
+2. 見つかれば、warmupコマンドは不要。そのままDiscordでの会話を進めてよい（2026-06-25に実証済みのパス）。
+3. 見つからない場合のみ、保険として次をBashで実行してから手順1を再試行する（依存モジュールの初回アクセス遅延対策、MCP起動タイムアウト30秒対策）：
    ```
    cd ~/.claude/plugins/cache/claude-plugins-official/discord/*/ && bun install --no-summary
    bun -e "await import('discord.js'); await import('@modelcontextprotocol/sdk/server/index.js');"
    ```
-3. 手順1でツールが見つかっていれば完了。
-4. 見つからなければ、ウォームアップ後でも読み込まれないことがある（2026-06-25実績：ウォームアップしても今回のセッションでは読み込まれず）。**`/reload-plugins`では直らない**——ユーザーに「このターミナルセッションを終了して新しいセッションを開始してください」と伝える。新セッションで手順1〜2を再実行する。
+4. それでも見つからなければ、**`/reload-plugins`では直らない**——ユーザーに「このターミナルセッションを終了して新しいセッションを開始してください」と伝える。新セッションで手順1から再実行する（2026-06-25実績：この「新セッション開始」だけで解決した）。
 
-詳細な調査経緯は前回PJの `\\YukiYoshiNAS\Shogiban-kaiseki-appli\CLAUDE.md` 冒頭を参照（Windows Defenderのリアルタイムスキャンが初回ファイルアクセス時に介入している可能性が最有力、未確定）。
+詳細な調査経緯は前回PJの `\\YukiYoshiNAS\Shogiban-kaiseki-appli\CLAUDE.md` 冒頭を参照（Windows Defenderのリアルタイムスキャンが初回ファイルアクセス時に介入している可能性が最有力、未確定。ただし2026-06-25の実績はwarmupなしで成功しているため、初回アクセス遅延説そのものが今回のケースの主因だったかは不確か）。
 
 ## What this project is
 
@@ -57,6 +60,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 ## Current status (2026-06-25)
 
 - 要件定義の初期段階。プラットフォーム・配布スコープは確定。残り2点（サイト/アプリブロックの実現範囲、解除の摩擦設計）はMVPのメリット・デメリット比較が先に必要とのことで保留中。
-- git: 本セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
-- **コミュニケーション手段をDiscordに移行予定**：ユーザーが現在のターミナルセッションを終了し、以降はDiscord経由でやり取りする意向。次セッションは新しいターミナル起動後、まずDiscordツールの読み込み確認（上記「最優先」セクション）から始めること。
-- 設計・実装はまだ未着手。
+- git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
+- **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
+- 設計・実装はまだ未着手。MVPメリデメ比較表の作成に着手中。

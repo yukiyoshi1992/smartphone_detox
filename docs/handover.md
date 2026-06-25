@@ -38,3 +38,20 @@
 ### 参考
 - 前回PJ：`\\YukiYoshiNAS\Shogiban-kaiseki-appli`（将棋盤解析アプリ。Android(Kotlin+Compose+CameraX+Retrofit) + FastAPIサーバ。環境・Discord運用の参考元）
 - リモートリポジトリ：`https://github.com/yukiyoshi1992/smartphone_detox.git`（push済み）
+
+## 2026-06-25（2回目セッション、Discord移行後）
+
+### このセッションでやったこと
+- セッション開始時、CLAUDE.md/handover.mdを読んで前回引き継ぎ内容を確認。
+- ユーザーから「Discordで会話したい」との指示を受け、`discord:configure`スキルで状態確認（トークン設定済み、`pairing`ポリシー、許可済みユーザー1名）。
+- ユーザーから直接Discordでメッセージ（「聞こえる？」）が届き、`mcp__plugin_discord_discord__reply`で応答 → **接続成功を確認**。
+- **重要な発見**：前セッションは`bun install`+`import`のwarmupコマンドを実行してもDiscordツールが読み込まれず、ユーザーに新セッション開始を依頼した。**今回のセッションではwarmupコマンドを一切実行せずに、最初のToolSearch呼び出しで即座にDiscordツールが読み込まれた**。つまり実際に効いていたのは「新しいターミナルセッションを開始する」こと自体であり、bun warmupは必須ではなかった可能性が高い。CLAUDE.mdの「最優先」セクションをこの実績に基づき更新済み（warmupは見つからない場合の保険に位置づけを変更）。
+- ユーザーから定常指示を再確認：作業1つ終わるごとにCLAUDE.md/handover.md更新→git commit&push、セッションが切れても継続できるようにする運用。
+
+### 次にやること（次セッション/次タスク最優先）
+1. 「ブラウザによらずブロックする範囲」のMVPメリデメ比較表を作成してユーザーに提示（案A：VPN/DNSベース全ブロック、案B：主要ブラウザのみAccessibilityService — 詳細は前セッションの記載を参照）。**着手中、未完了の場合はここから継続。**
+2. 比較表を踏まえ、「ブラウザによらずブロックする範囲」と「ブロック解除の摩擦設計」をユーザーに再確認・確定する。
+3. 確定後、技術方針（アーキテクチャ）をまとめてユーザーに提示・確認を取る。
+
+### 参考
+- Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。
