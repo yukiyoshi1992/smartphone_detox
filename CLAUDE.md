@@ -74,7 +74,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 
 ## Current status (2026-06-25)
 
-- 要件定義はほぼ確定。プラットフォーム・配布スコープ・サイトブロック実現方式（案C、対象Brave/Chrome/LINE）・解除の摩擦設計（A：即時）・追加要求①②の詳細（時間帯×在宅判定のAND条件、通知はマナーモードのみ）まで確定済み。残りは優先度の低い「対象デバイス」のみ。次は技術方針（アーキテクチャ）の検討に進める段階。
+- 要件定義はほぼ確定（残りは優先度の低い「対象デバイス」のみ）。
+- **技術方針（アーキテクチャ）ドラフト作成済み**：`01 初回開発/02 設計・開発/アーキテクチャ検討.md`。サーバーなし単一Androidアプリ構成、在宅判定（Wi-Fi SSID OR ジオフェンス）、ルールエンジン（時間帯×在宅条件のAND、曜日/休日祝日対応、祝日データは静的JSON）、AccessibilityServiceでのBrave/Chrome URLフィルタ＋LINEはアプリ全体ブロック扱い、マナーモード自動切替（`ACCESS_NOTIFICATION_POLICY`）、バックグラウンド安定性対策、必要権限一覧をまとめた。**ユーザーへの提示・確認待ち**（4つの確認ポイントをドキュメント末尾に記載）。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
 - 設計・実装はまだ未着手。
