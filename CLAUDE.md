@@ -73,6 +73,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 - **要件定義・技術方針ともに全項目確定**。`01 初回開発/01 要件/要件定義.md`（確定版まとめ＋Mermaidアーキテクチャ図）を作成済み。
 - **実装フェーズ進行中**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、`minSdk=34`/`compileSdk・targetSdk=37`）。日本語パスのGradleエラー・compileSdk不足エラーは解消済み（上記「開発環境・git運用」参照）。実機での起動確認済み。
 - **実装順序①完了・実機検証済み**：`BlockAccessibilityService`（`block`パッケージ）を実装。フォアグラウンドアプリ検知でブロック対象（現状YouTubeのみハードコード）ならホーム画面に戻す。実機でYouTubeアプリを開くと即座にホームに戻ることを確認済み。
-- **実装順序②完了・実機検証済み**：`home`パッケージにWi-Fi在宅判定を実装（`HomeWifiSettings`で複数SSID設定の保存、`HomeWifiStatus`で現在のWi-Fi接続SSIDとの一致判定、機種依存対策として`WifiManager.connectionInfo`へのフォールバックあり）。MainActivityに設定UI・「今接続中のWi-Fiを登録」ボタン・権限リクエスト・状態確認ボタンを追加。実機で在宅/非在宅の判定が正しく動作することを確認済み。次は実装順序③（ルールエンジン：時間帯×在宅条件のAND評価）に着手する段階。
+- **実装順序②完了・実機検証済み**：`home`パッケージにWi-Fi在宅判定を実装（`HomeWifiSettings`で複数SSID設定の保存、`HomeWifiStatus`で現在のWi-Fi接続SSIDとの一致判定、機種依存対策として`WifiManager.connectionInfo`へのフォールバックあり）。MainActivityに設定UI・「今接続中のWi-Fiを登録」ボタン・権限リクエスト・状態確認ボタンを追加。実機で在宅/非在宅の判定が正しく動作することを確認済み。
+- **実装順序③実装済み（実機検証待ち）**：`rule`パッケージにルールエンジンを実装（`TimeRule`：曜日・開始終了時刻・在宅条件を持つルール、`RuleEngine`：日付をまたぐ時間帯にも対応した有効判定、`RuleSettings`：SharedPreferencesへの保存、`RuleSection`：ルール追加・削除・有効確認のUI）。祝日対応は未実装（後続ステップで対応）。commit&push済み、ユーザーのビルド・実機確認待ち。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
