@@ -2,11 +2,12 @@ package com.yukiyoshi.smphdetox.rule
 
 import android.content.Context
 
-private const val PREFS_NAME = "time_rules"
+private const val DEFAULT_PREFS_NAME = "time_rules"
 private const val KEY_RULES = "rules"
 
-class RuleSettings(context: Context) {
-    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+/** storeNameを変えることで、ブロック用ルールと通知用ルールなど別々のルール集合を保存できる。 */
+class RuleSettings(context: Context, storeName: String = DEFAULT_PREFS_NAME) {
+    private val prefs = context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
 
     var rules: List<TimeRule>
         get() = prefs.getStringSet(KEY_RULES, emptySet())

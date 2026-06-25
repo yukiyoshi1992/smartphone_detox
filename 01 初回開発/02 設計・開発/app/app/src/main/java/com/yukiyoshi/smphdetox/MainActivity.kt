@@ -39,6 +39,7 @@ import com.yukiyoshi.smphdetox.block.BlockSettingsSection
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.currentWifiSsid
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
+import com.yukiyoshi.smphdetox.notification.NotificationRuleSection
 import com.yukiyoshi.smphdetox.rule.RuleSection
 import com.yukiyoshi.smphdetox.ui.theme.Smartphone_detoxTheme
 
@@ -149,6 +150,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
         BlockSettingsSection()
+
+        Spacer(modifier = Modifier.height(24.dp))
+        NotificationRuleSection()
     }
 }
 
