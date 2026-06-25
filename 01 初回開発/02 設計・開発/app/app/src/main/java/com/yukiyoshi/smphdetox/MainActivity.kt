@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.yukiyoshi.smphdetox.block.BlockSettingsSection
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.currentWifiSsid
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
@@ -145,6 +146,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
         RuleSection()
+
+        Spacer(modifier = Modifier.height(24.dp))
+        BlockSettingsSection()
     }
 }
 
