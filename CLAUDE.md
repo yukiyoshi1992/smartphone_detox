@@ -77,10 +77,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
   - **画面はTOP／設定／ルール管理（一覧）／ルール作成・編集の4つ**（`ui/`配下、Navigation Compose使用、`ui/AppNavHost.kt`でルーティング）。
     - TOP画面（`ui/TopScreen.kt`）：設定・ルール管理への遷移、ブロック機能全体ON/OFFスイッチ（`block/AppMasterSettings.kt`）、在宅状況・アクセシビリティ許可状況の表示、通知ルール一括適用ボタン。
     - 設定画面（`ui/SettingsScreen.kt`）：アクセシビリティ設定、通知アクセス許可、Wi-Fi登録・在宅確認。
-    - ルール管理画面（`ui/RuleManagementScreen.kt`）：ルール一覧（名前・種別・有効/無効スイッチ）、新規作成ボタン、行ごとの削除ボタン、タップで編集画面へ。
-    - ルール作成・編集画面（`ui/RuleEditScreen.kt`）：1ルールずつ、種類（アプリブロック／サイトブロック／通知）を選んでから対象（アプリ選択・ドメイン文字列）と時間帯/曜日/在宅/祝日条件を設定。
-  - **ルールモデルは`rule/AppRule.kt`に統一**：1つのルールが`targetType`（APP_BLOCK/SITE_BLOCK/NOTIFICATION）と`targets`（パッケージ名またはドメイン文字列）を直接持つ。旧来の「グローバルなブロック対象リスト＋別管理の時間帯ルール」「ブロック用/通知用で別のルール保存先」という分離構造は廃止し、`rule/AppRuleSettings.kt`に一本化。
-  - `block/BlockAccessibilityService.kt`が`rule/RuleEngine.kt`（曜日・時間帯・在宅・祝日判定）を使って今アクティブなAPP_BLOCK/SITE_BLOCKルールのtargetsを都度算出し、実際のブロック判定に使う（**以前はルールの時間帯条件がブロック動作に反映されておらず、登録した対象は常時ブロックされていた不備があり、2026-06-25に修正済み**）。
-- **実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは更新済みだが「結果：未実施」が多数残っている状態）。
+    - ルール管理画面（`ui/RuleManagementScreen.kt`）：**タブ方式（アプリブロック／サイトブロック／通知）**。各タブはその種類のルールだけを一覧表示（名前・有効/無効スイッチ）し、新規作成ボタン（押すとそのタブの種類で作成画面へ）、行ごとの削除ボタン、タップで編集画面へ。種類を選ぶUIはここでは存在せず、タブ＝種類。
+    - ルール作成・編集画面（`ui/RuleEditScreen.kt`）：1ルールずつ、対象（APP_BLOCKならアプリ選択＝検索可、SITE_BLOCKならドメイン文字列）と時間帯（「常時適用」チェックボックスあり）/曜日（FlowRowで折り返し表示、横スクロール無し）/在宅/祝日の扱い（`HolidayMode`：通常/含める/除く/のみ、の4択）を設定。種類はナビゲーション引数（新規作成時）または既存ルール（編集時）から決まり、画面内で変更不可。
+    - 設定・ルール管理・ルール編集の各画面に`ui/BackButtonRow.kt`の戻るボタンを設置。
+  - **ルールモデルは`rule/AppRule.kt`に統一**：1つのルールが`targetType`（APP_BLOCK/SITE_BLOCK/NOTIFICATION）と`targets`（パッケージ名またはドメイン文字列）を直接持つ。旧来の「グローバルなブロック対象リスト＋別管理の時間帯ルール」「ブロック用/通知用で別のルール保存先」という分離構造は廃止し、`rule/AppRuleSettings.kt`に一本化。祝日の扱いは`HolidayMode`enum（NORMAL/INCLUDE/EXCLUDE/ONLY）。
+  - `block/BlockAccessibilityService.kt`が`rule/RuleEngine.kt`（曜日・時間帯・在宅・祝日判定）を使って今アクティブなAPP_BLOCK/SITE_BLOCKルールのtargetsを都度算出し、実際のブロック判定に使う（**以前はルールの時間帯条件がブロック動作に反映されておらず、登録した対象は常時ブロックされていた不備があり、2026-06-25に修正済み**）。診断用に`Log.d`（タグ`BlockAccessibility`）をブラウザイベント処理部に追加済み。
+- **既知の未解決issue**：サイトブロックがBraveで効かない場合がある（ユーザー報告、課題13）。原因未特定、ログ追加済みで次回再現時に切り分け予定。
+- **実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは更新済みだが「結果：未実施」が多数残っている状態）。**ルールの保存形式が2026-06-25中に2回変わっているため、それより前に作成したルールは画面に表示されない（再作成が必要）。**
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
