@@ -20,6 +20,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 
 詳細な調査経緯は前回PJの `\\YukiYoshiNAS\Shogiban-kaiseki-appli\CLAUDE.md` 冒頭を参照（Windows Defenderのリアルタイムスキャンが初回ファイルアクセス時に介入している可能性が最有力、未確定。ただし2026-06-25の実績はwarmupなしで成功しているため、初回アクセス遅延説そのものが今回のケースの主因だったかは不確か）。
 
+## ディレクトリ構成（2026-06-25確定）
+
+今回の開発はあくまで「初回開発」スコープのため、企画・要件・設計・開発の作業はすべて
+`01 初回開発/` 配下に置く（トップレベルに並列のフォルダを作らない）。
+- `01 初回開発/00 企画/`：課題・企画メモ
+- `01 初回開発/01 要件/`：要件メモ・要件関連の検討資料（MVPメリデメ比較表もここ）
+- `01 初回開発/02 設計・開発/`：今後の設計・実装作業はここに置く（ユーザー指定）
+
 ## What this project is
 
 スマホデトックスを実現するスマホアプリ。自宅にいるとき（Wi-Fi/GPSでおおよそ判定）に、指定したサイト・アプリ（例：YouTubeアプリ、YouTubeサイト）へのアクセスをブロックする。アプリ上でON/OFFを即切替できる（一時的に必要になった場合に対応）。
@@ -50,7 +58,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 
 - **対象プラットフォーム：Androidのみ**（iOSは対象外。Screen Time APIの制約を回避できる）
 - **配布スコープ：開発者本人の個人利用のみ**（ストア配布は想定しない。サイドロード前提で実装手段の幅が広い）
-- **サイトブロックの実現方式：案C確定**（AccessibilityServiceで主要ブラウザを複数まとめてカバー、VPN不要。詳細比較は`02 要件定義/MVPメリデメ比較_ブロック方式.md`）。
+- **サイトブロックの実現方式：案C確定**（AccessibilityServiceで主要ブラウザを複数まとめてカバー、VPN不要。詳細比較は`01 初回開発/01 要件/MVPメリデメ比較_ブロック方式.md`）。
   - **対象アプリ（初期スコープ）：Brave、Chrome、LINE**（LINEはアプリ内ブラウザのURL読み取りが対象。3つともAccessibilityServiceでUIツリーを読んでURL判定する対象として技術的には同列に扱える）。
   - 既知の弱点：AccessibilityServiceはAndroid側のバッテリー最適化・未使用アプリの権限自動剥奪等でOSにOFFにされることがある（仕組み自体の制約、案不問）。緩和策（OFFを検知して再有効化を促す通知等）の実装が必要。
 
