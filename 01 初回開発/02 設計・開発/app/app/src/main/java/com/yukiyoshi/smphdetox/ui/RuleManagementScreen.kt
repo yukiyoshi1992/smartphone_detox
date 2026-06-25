@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.yukiyoshi.smphdetox.notification.NotificationAlarmScheduler
 import com.yukiyoshi.smphdetox.rule.AppRuleSettings
 import com.yukiyoshi.smphdetox.rule.RuleTargetType
 
@@ -95,11 +96,13 @@ fun RuleManagementScreen(
                         onCheckedChange = {
                             ruleSettings.updateRule(rule.copy(enabled = it))
                             rules = ruleSettings.rules
+                            NotificationAlarmScheduler.reschedule(context)
                         },
                     )
                     TextButton(onClick = {
                         ruleSettings.removeRule(rule.id)
                         rules = ruleSettings.rules
+                        NotificationAlarmScheduler.reschedule(context)
                     }) {
                         Text(text = "削除")
                     }

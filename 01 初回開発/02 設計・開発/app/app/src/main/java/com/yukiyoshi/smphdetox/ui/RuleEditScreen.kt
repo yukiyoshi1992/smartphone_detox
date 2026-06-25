@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.yukiyoshi.smphdetox.block.listLaunchableApps
+import com.yukiyoshi.smphdetox.notification.NotificationAlarmScheduler
 import com.yukiyoshi.smphdetox.rule.AppRule
 import com.yukiyoshi.smphdetox.rule.AppRuleSettings
 import com.yukiyoshi.smphdetox.rule.HolidayMode
@@ -210,6 +211,7 @@ fun RuleEditScreen(
                 } else {
                     ruleSettings.updateRule(rule)
                 }
+                NotificationAlarmScheduler.reschedule(context)
                 onDone()
             }
         }) {
@@ -220,6 +222,7 @@ fun RuleEditScreen(
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(onClick = {
                 ruleSettings.removeRule(existing.id)
+                NotificationAlarmScheduler.reschedule(context)
                 onDone()
             }) {
                 Text(text = "このルールを削除")
