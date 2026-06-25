@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
   - Claudeが作業する前：必要に応じてユーザー側の最新コミットをpullしているか確認（通常はClaudeが先行して作業することが多い）。
   - ユーザーがAndroid Studio側で作業する前：**必ず`git pull`**してClaude側の変更を取り込む。
   - ユーザーがコミットしたら`git push`し、Claudeは次の作業前にNASパス側で`git pull`して取り込む。
-- NAS特有のビルドエラー（`Permission denied`等）が出た場合の既知の対処（前回PJで実証済み）：`gradle.properties`に`org.gradle.vfs.watch=false`と`android.overridePathCheck=true`を追加。ただしローカルクローンから動かしていればそもそも発生しないはず。
+- **2026-06-25実績：ローカルクローンでも日本語パスのエラーが発生し、対処済み。** Android StudioでGradle Sync時に`Your project path contains non-ASCII characters`エラーが発生（プロジェクトパス`01 初回開発/02 設計・開発/app`に日本語フォルダ名が含まれるため）。ローカルクローンに切り替えても**NAS特有ではなく日本語パス自体が原因**なので発生する。対処：`app/gradle.properties`に`android.overridePathCheck=true`と`org.gradle.vfs.watch=false`を追加して解消済み（前回PJと同じ対処、commit済み）。今後似たエラーが出た場合はこの2行が入っているか確認すること。
 
 ## What this project is
 
@@ -70,7 +70,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 ## Current status (2026-06-25)
 
 - **要件定義・技術方針ともに全項目確定**。`01 初回開発/01 要件/要件定義.md`（確定版まとめ＋Mermaidアーキテクチャ図）を作成済み。
-- **実装着手フェーズ**：ユーザーがAndroid Studioでプロジェクト作成中。ローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）作成済み、手順案内済み。プロジェクト作成完了の報告待ち。
+- **実装着手フェーズ**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、Compose Empty Activity）。日本語パスのGradleエラーは解消済み（上記「開発環境・git運用」参照）。commit&push済み、NASパス側もpull済み。次はGradle Syncが通って空のCompose画面が起動できるかユーザーに確認してもらう。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
 - 設計・実装はまだ未着手。
