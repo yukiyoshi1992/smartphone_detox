@@ -75,7 +75,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 ## Current status (2026-06-25)
 
 - 要件定義はほぼ確定（残りは優先度の低い「対象デバイス」のみ）。
-- **技術方針（アーキテクチャ）ドラフト作成済み**：`01 初回開発/02 設計・開発/アーキテクチャ検討.md`。サーバーなし単一Androidアプリ構成、在宅判定（Wi-Fi SSID OR ジオフェンス）、ルールエンジン（時間帯×在宅条件のAND、曜日/休日祝日対応、祝日データは静的JSON）、AccessibilityServiceでのBrave/Chrome URLフィルタ＋LINEはアプリ全体ブロック扱い、マナーモード自動切替（`ACCESS_NOTIFICATION_POLICY`）、バックグラウンド安定性対策、必要権限一覧をまとめた。**ユーザーへの提示・確認待ち**（4つの確認ポイントをドキュメント末尾に記載）。
+- **技術方針（アーキテクチャ）大筋確定**：`01 初回開発/02 設計・開発/アーキテクチャ検討.md`。
+  - サーバーなし単一Androidアプリ構成（確定）
+  - 在宅判定：**Wi-FiのみでMVPを作る方針を提案中**（GPSはWi-Fi/GPSのメリデメ比較の結果、精度・実装コストで劣るため必要になったら後で追加。最終確認待ち）
+  - LINEはアプリ単位ブロックのみで確定（URL/サイト単位の制御は不要）
+  - 祝日データは自動更新（公開APIから取得しローカルキャッシュ＋フォールバック）で確定
+  - ルールエンジン、AccessibilityServiceでのBrave/Chrome URLフィルタ、マナーモード自動切替、バックグラウンド安定性対策、必要権限一覧は当初ドラフトのまま。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
 - 設計・実装はまだ未着手。
