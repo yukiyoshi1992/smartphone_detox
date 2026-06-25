@@ -133,13 +133,20 @@
   - **対処**：`RuleSection.kt`の時刻入力をテキスト手入力からMaterial3の`TimePicker`（ダイアログ表示、`rememberTimePickerState`使用）に変更。開始・終了の2つのボタンを`Row`+`Arrangement.spacedBy`で横並びにしてレイアウト崩れも解消。commit&push済み。**ユーザー側の再ビルド・確認待ち。**
 
 - **進め方の変更（ユーザー指示）**：「後でまとめてでいいよ。ほかにもUI見にくいところいっぱいあるし、wifi・GPS設定画面や管理画面は分けたいしね。ちょっとステップバイステップすぎるかも。ざっと一通り開発してモンキーテストで洗い出していく形式にしようか。」との指示。**1機能実装→即実機確認、を繰り返す進め方から、④⑤⑥を一通り実装してからまとめてモンキーテストする進め方に変更**。画面分割（Wi-Fi/GPS設定画面と管理画面を分ける等のUI整理）もモンキーテスト後にまとめて対応する。
+- ユーザーから「はい、お願いします」の承認を受け、**④⑤⑥を都度確認なしで連続実装**：
+  - **④Brave/ChromeのURL検知**：`block/BlockAccessibilityService.kt`にBROWSER_URL_BAR_IDSマップ（`com.android.chrome:id/url_bar`等）を追加し、対象ブラウザのアドレスバーノードを`findAccessibilityNodeInfosByViewId`で取得してテキストを判定。accessibility_service_configのeventTypesに`typeWindowContentChanged`を追加（同一画面内でのURL変化を検知するため）。ブロック対象アプリ・サイトはこれまでハードコード（YouTubeのみ）だったが、`block/BlockSettings.kt`（SharedPreferences）＋`block/BlockSettingsSection.kt`（UI）に変更し、`block/InstalledApps.kt`でインストール済みアプリ一覧から選択して追加できるようにした（Manifestに`<queries>`でACTION_MAIN/CATEGORY_LAUNCHERを宣言、QUERY_ALL_PACKAGES権限は不要な方式）。
+  - **⑤通知マナーモード自動切替**：時間帯×在宅条件のルール機構をブロック用と共通化するため、ルール追加フォームを`rule/TimeRuleForm.kt`に抽出し、`rule/RuleSettings.kt`を保存先（SharedPreferencesファイル名）パラメータ化。`notification/RingerModeController.kt`でACCESS_NOTIFICATION_POLICY権限チェック＋`AudioManager.ringerMode`切替、`notification/NotificationRuleSection.kt`で通知専用ルールのUIと「今のルールを適用」ボタンを実装。
+  - **⑥祝日API連携**：`holiday/HolidayRepository.kt`でholidays-jp公開API（`https://holidays-jp.github.io/api/v1/date.json`）から祝日一覧を取得し、SharedPreferencesにキャッシュ（取得失敗時は既存キャッシュを使い続ける）。`rule/TimeRule.kt`に`includeHolidays`フィールドを追加（encode/decodeも更新）、`rule/RuleEngine.kt`の判定ロジックに祝日集合を組み込み、ONなら曜日指定に関わらず祝日でも有効と判定。ブロック用・通知用の両ルール画面で表示時に`LaunchedEffect(Unit) { holidayRepository.refreshIfStale() }`で自動更新。INTERNET権限とkotlinx-coroutines-android依存を追加。
+  - commit&push済み（④⑤⑥それぞれ個別コミット）。UATシナリオのカテゴリC/D/Eを「実装待ち」→「実施可能」に更新し、新しいUI操作手順（アプリ選択追加、祝日チェックボックス、通知権限ボタン等）を反映。**①～⑥すべて実装済み、ユーザー側でのまとめてビルド・モンキーテストはこれから。**
 
 ### 次にやること（次セッション/次タスク最優先）
-1. **④Brave/ChromeのURL検知→⑤通知マナーモード切替→⑥祝日API連携を、都度のユーザー確認を挟まずまとめて実装する。**実装するたびにUATシナリオ（`01 初回開発/03 UAT/UATシナリオ.md`）への追記は続けるが、実機確認はまとめて後で行う。**ここから継続。**
-2. 一通り実装できたら、ユーザーにまとめてビルド・モンキーテストしてもらい、洗い出された問題に対応する。UI整理（Wi-Fi/GPS設定画面と管理画面の分割等）もこのタイミングで対応する。
-3. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
-4. **新しいAndroid権限やAPIを使う際は、Manifestへの宣言漏れ・機種依存のAPI挙動差がないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ・機種依存のSSID取得不具合、と続けて実機検証まで進んでようやく発覚した教訓）。
-5. **テキスト手入力よりも、選択式UI（TimePicker、ドロップダウン等）を最初から優先する**——時刻入力で手入力を選んだ結果ユーザーから「打ちにくい」と指摘され手戻りになった。今後同様の入力項目（日付・時刻・定型選択肢など）はテキスト入力より先に選択式UIを検討すること。
+1. **ユーザーに`git pull`して再ビルドしてもらい、一通りモンキーテストしてもらう。**洗い出された不具合・UI課題はここから個別に対応する。**ここから継続。**
+2. モンキーテストで指摘されたUI整理（Wi-Fi/GPS設定画面と管理画面の分割など、画面が縦に長くなりすぎている問題）にまとめて対応する。
+3. UATシナリオ（`01 初回開発/03 UAT/UATシナリオ.md`）の「結果：未実施」になっているケースを、モンキーテストの結果に応じてOK/NGで更新していく。
+4. Claudeの作業はNASパス（`\\YukiYoshiNAS\...\smartphone_detox`）上で行い、ユーザーの作業はローカルクローン（`C:\Users\yukiy\dev\smartphone_detox`）上で行う前提を継続。作業開始前に両者とも`git pull`を忘れないこと。
+5. **新しいAndroid権限やAPIを使う際は、Manifestへの宣言漏れ・機種依存のAPI挙動差がないか実装時に一度チェックリスト的に確認すること**（実装順序①のXML属性ミス、②の権限宣言漏れ・機種依存のSSID取得不具合、と続けて実機検証まで進んでようやく発覚した教訓）。
+6. **テキスト手入力よりも、選択式UI（TimePicker、ドロップダウン等）を最初から優先する**——時刻入力で手入力を選んだ結果ユーザーから「打ちにくい」と指摘され手戻りになった。今後同様の入力項目（日付・時刻・定型選択肢など）はテキスト入力より先に選択式UIを検討すること。
+7. **Brave/ChromeのアドレスバーリソースID（`url_bar`）は未実機検証**——両ブラウザともChromiumベースなので同名のはずだが、実際に動くかはモンキーテストで要確認。動かない場合はlogcatでビュー階層を確認し、実際のリソースIDに合わせて`BROWSER_URL_BAR_IDS`を調整する。
 
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。

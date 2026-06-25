@@ -74,7 +74,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 - **実装フェーズ進行中**：Androidプロジェクト作成済み（`01 初回開発/02 設計・開発/app`、パッケージ名`com.yukiyoshi.smphdetox`、`minSdk=34`/`compileSdk・targetSdk=37`）。日本語パスのGradleエラー・compileSdk不足エラーは解消済み（上記「開発環境・git運用」参照）。実機での起動確認済み。
 - **実装順序①完了・実機検証済み**：`BlockAccessibilityService`（`block`パッケージ）を実装。フォアグラウンドアプリ検知でブロック対象（現状YouTubeのみハードコード）ならホーム画面に戻す。実機でYouTubeアプリを開くと即座にホームに戻ることを確認済み。
 - **実装順序②完了・実機検証済み**：`home`パッケージにWi-Fi在宅判定を実装（`HomeWifiSettings`で複数SSID設定の保存、`HomeWifiStatus`で現在のWi-Fi接続SSIDとの一致判定、機種依存対策として`WifiManager.connectionInfo`へのフォールバックあり）。MainActivityに設定UI・「今接続中のWi-Fiを登録」ボタン・権限リクエスト・状態確認ボタンを追加。実機で在宅/非在宅の判定が正しく動作することを確認済み。
-- **実装順序③実装済み**：`rule`パッケージにルールエンジンを実装（`TimeRule`：曜日・開始終了時刻・在宅条件を持つルール、`RuleEngine`：日付をまたぐ時間帯にも対応した有効判定、`RuleSettings`：SharedPreferencesへの保存、`RuleSection`：ルール追加・削除・有効確認のUI、時刻入力はMaterial3 TimePicker）。祝日対応は未実装（⑥で対応）。
+- **実装順序③実装済み**：`rule`パッケージにルールエンジンを実装（`TimeRule`：曜日・開始終了時刻・在宅条件を持つルール、`RuleEngine`：日付をまたぐ時間帯にも対応した有効判定、`RuleSettings`：SharedPreferencesへの保存、`RuleSection`：ルール追加・削除・有効確認のUI、時刻入力はMaterial3 TimePicker）。
 - **進め方変更（2026-06-25、ユーザー指示）**：1機能実装→即実機確認、を繰り返す進め方から、**④⑤⑥を都度のユーザー確認を挟まずまとめて実装し、最後にまとめてモンキーテストする**進め方に変更。UI整理（Wi-Fi/GPS設定画面と管理画面の分割等）もモンキーテスト後にまとめて対応する。
+- **実装順序④完了**：`BlockAccessibilityService`にBrave/Chromeのアドレスバー検知を追加（`com.android.chrome:id/url_bar`等のリソースIDを読み取り、ブロック対象ドメインに該当すればホームに戻す）。ブロック対象アプリ・サイトはハードコードを廃止し、`BlockSettings`（SharedPreferences）＋`BlockSettingsSection`（UI、インストール済みアプリから選択して追加）で管理するように変更。
+- **実装順序⑤完了**：`notification`パッケージに通知マナーモード自動切替を実装（`RingerModeController`：`ACCESS_NOTIFICATION_POLICY`権限チェック＋リンガーモード切替、`NotificationRuleSection`：通知専用の時間帯ルールUI、ブロック用ルールと同じ`TimeRuleForm`/`RuleEngine`を再利用し`RuleSettings`の保存先のみ分離）。
+- **実装順序⑥完了**：`holiday`パッケージに祝日API連携を実装（`HolidayRepository`：holidays-jp公開APIから祝日一覧を取得しSharedPreferencesにキャッシュ、取得失敗時は既存キャッシュを使い続ける）。`TimeRule.includeHolidays`を追加し、ONにすると曜日指定に関わらず祝日ならルールが適用される。ブロック用・通知用の両ルール画面表示時に`refreshIfStale()`で自動更新。
+- **①～⑥すべて実装済み。実機での一括ビルド・モンキーテストはこれから**（UATシナリオの該当ケースは追加済みだが「結果：未実施」が多数残っている状態）。
 - git: 前セッションで初期化、remote設定・初回push済み（`https://github.com/yukiyoshi1992/smartphone_detox.git`）。
 - **コミュニケーション手段をDiscordに移行完了**：新セッションでDiscord接続に成功（上記「最優先」セクション参照）。以降のやり取りはDiscord経由（chat_id `1517480345874731078`）。
