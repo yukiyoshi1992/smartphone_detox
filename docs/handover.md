@@ -211,5 +211,9 @@
   - commit&push済み。**ユーザー側の再ビルド・実機での動作確認待ち**（実際にアクセシビリティをOFFにしてみて通知が来るか）。
   - 余談：ユーザーからAndroid Studioの「再生ボタン・更新ボタンが押せない」という質問あり。Gradle同期/インデックス処理がバックグラウンドで止まっている典型的な事象として、IDE再起動→`Invalidate Caches`→PC再起動の順で案内（コード変更は発生していない、口頭サポートのみ）。
 
+- ユーザーから「通知ルールは自動実行されません・・・の文言って残ってますが、消せますか？」「通知ルールを適応ボタンももういらないはずです」と指摘。AlarmManager化で通知ルールは自動切替されるようになったため、TOP画面に残っていた旧来の説明文（15分ポーリング時代の文言）と「通知ルールを今すぐ適用」ボタン（手動トリガー用、不要になった）はユーザーの言う通り役目を終えていた。
+  - **対処**：`ui/TopScreen.kt`から該当のTextと手動適用Button・その評価ロジック（`notificationStatusText`等）を削除。未使用となった`AppRuleSettings`/`HolidayRepository`/`activeRules`/`applyRingerMode`等のimportも除去。TOP画面は全体ON/OFFスイッチと状況表示（在宅・アクセシビリティ・通知アクセス）のみのシンプルな構成に。
+  - commit&push予定。
+
 ### 参考
 - Discordのchat_id：`1517480345874731078`（ユーザーのDiscord user_id: `795820938221453314`、username: `yoshi19920305`）。返信時は`mcp__plugin_discord_discord__reply`に`chat_id`を渡す。

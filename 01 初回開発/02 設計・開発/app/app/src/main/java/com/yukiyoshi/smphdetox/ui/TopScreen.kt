@@ -28,15 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.yukiyoshi.smphdetox.block.AppMasterSettings
 import com.yukiyoshi.smphdetox.block.isBlockAccessibilityServiceEnabled
-import com.yukiyoshi.smphdetox.holiday.HolidayRepository
 import com.yukiyoshi.smphdetox.home.HomeWifiSettings
 import com.yukiyoshi.smphdetox.home.isHomeWifiConnected
-import com.yukiyoshi.smphdetox.notification.applyRingerMode
 import com.yukiyoshi.smphdetox.notification.hasNotificationPolicyAccess
-import com.yukiyoshi.smphdetox.rule.AppRuleSettings
-import com.yukiyoshi.smphdetox.rule.RuleTargetType
-import com.yukiyoshi.smphdetox.rule.activeRules
-import java.time.LocalDateTime
 
 @Composable
 private fun StatusLine(label: String, value: String, isWarning: Boolean) {
@@ -56,13 +50,10 @@ fun TopScreen(
     val context = LocalContext.current
     val masterSettings = remember { AppMasterSettings(context) }
     val homeWifiSettings = remember { HomeWifiSettings(context) }
-    val ruleSettings = remember { AppRuleSettings(context) }
-    val holidayRepository = remember { HolidayRepository(context) }
     var masterEnabled by remember { mutableStateOf(masterSettings.enabled) }
     var homeStatusText by remember { mutableStateOf("未確認") }
     var accessibilityEnabled by remember { mutableStateOf(false) }
     var notificationAccessEnabled by remember { mutableStateOf(false) }
-    var notificationStatusText by remember { mutableStateOf("未適用") }
 
     LaunchedEffect(Unit) {
         accessibilityEnabled = isBlockAccessibilityServiceEnabled(context)
@@ -114,25 +105,6 @@ fun TopScreen(
             isWarning = !notificationAccessEnabled,
         )
         HorizontalDivider()
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "通知ルールは約15分おきに自動チェックされ、マナーモード/通常モードに\n自動で切り替わります（OSの省電力機能の影響で数分前後する場合があります）。\n下のボタンですぐに反映することもできます。")
-        Button(onClick = {
-            val isHome = isHomeWifiConnected(context, homeWifiSettings.homeSsids)
-            val holidayDates = holidayRepository.cachedHolidayDates()
-            val notificationRules = ruleSettings.rules.filter { it.targetType == RuleTargetType.NOTIFICATION }
-            val active = activeRules(notificationRules, LocalDateTime.now(), isHome, holidayDates)
-            val applied = applyRingerMode(context, quiet = active.isNotEmpty())
-            notificationAccessEnabled = hasNotificationPolicyAccess(context)
-            notificationStatusText = when {
-                !applied -> "通知へのアクセス権限が必要です（設定画面で許可してください）"
-                active.isEmpty() -> "対象ルールなし→通常モードに設定"
-                else -> "マナーモードに設定（該当: ${active.joinToString(", ") { it.label }}）"
-            }
-        }) {
-            Text(text = "通知ルールを今すぐ適用")
-        }
-        Text(text = notificationStatusText)
 
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onNavigateToSettings) {
